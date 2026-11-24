@@ -7,27 +7,46 @@
 الموقع واجهة ثابتة مناسبة لـ GitHub Pages. ملف الدخول هو `index.html`.
 
 1. افتح إعدادات المستودع في GitHub ثم **Pages** واختر النشر من الفرع `main` والمجلد `/ (root)`.
-2. انتظر اكتمال النشر ثم افتح رابط الموقع.
+2. رابط الموقع: https://bouafiazakaria71-png.github.io/smart-revision-hub/
 
-## تفعيل الحسابات والمكتبة السحابية (Supabase)
+## ربط Supabase (تم إعداد ملفات الموقع)
 
-المصادقة لا تعمل فعليًا قبل ربط مشروع Supabase. لا توجد كلمات مرور تجريبية أو حساب مسؤول مضمّن في ملفات الموقع.
+تم إنشاء مشروع Supabase وربط إعداداته العامة في `config.js` بالفعل:
 
-1. أنشئ مشروعًا في [Supabase](https://supabase.com/).
-2. من **Project Settings → API** انسخ Project URL والمفتاح العام **anon/publishable**.
-3. افتح `config.js` واستبدل القيمتين:
-   - `SUPABASE_URL`
-   - `SUPABASE_ANON_KEY`
-4. في Supabase افتح **SQL Editor** ونفّذ كامل محتوى `supabase-schema.sql`.
-5. من **Authentication → URL Configuration** ضع رابط GitHub Pages في **Site URL** وأضفه ضمن **Redirect URLs** بهذا الشكل: `https://bouafiazakaria71-png.github.io/smart-revision-hub/`.
-6. لتفعيل الدخول بحساب Google:
-   - افتح [Google Cloud Console](https://console.cloud.google.com/) وأنشئ OAuth Client من نوع **Web application**.
-   - في **Authorized redirect URIs** أضف عنوان **Callback URL** الذي يعرضه Supabase في صفحة **Authentication → Providers → Google** (يكون عادةً `https://<project-ref>.supabase.co/auth/v1/callback`). لا تستخدم رابط GitHub Pages هنا.
-   - فعّل مزوّد **Google** في Supabase، ثم أدخل **Client ID** و**Client Secret** اللذين أنشأهما Google واحفظهما في إعدادات Supabase فقط. لا تضع Client Secret في `config.js` أو GitHub.
-   - أضف رابط GitHub Pages أعلاه إلى **Redirect URLs** في Supabase حتى يسمح بالعودة إلى الموقع بعد نجاح تسجيل الدخول.
-   - إذا كان تطبيق OAuth في وضع الاختبار، أضف حساب Google الذي سيختبر الدخول ضمن **Test users** في Google Cloud Console.
-7. أنشئ حسابًا بالبريد الإلكتروني من الموقع عند الحاجة، وأكّد بريدك الإلكتروني.
-8. عيّن حسابك مسؤولًا من SQL Editor بعد استبدال البريد في الاستعلام الموجود أسفل `supabase-schema.sql`.
+- Project URL: `https://fxrfxilxbxrkxadgfkxw.supabase.co`
+- المفتاح المستخدم في المتصفح هو **Publishable key** فقط.
+- تم تنفيذ `supabase-schema.sql` والتحقق من ظهور الجدولين `profiles` و`study_resources`.
+
+لا تستبدل الإعدادات الحالية في `config.js` إلا عند تغيير مشروع Supabase. لا تضف مطلقًا مفتاح `Secret` أو `service_role` إلى ملفات GitHub.
+
+## تفعيل تسجيل الدخول بالبريد وGoogle
+
+### إعداد عناوين العودة في Supabase
+
+1. افتح **Authentication → URL Configuration**.
+2. ضع عنوان الموقع التالي في **Site URL**:
+   `https://bouafiazakaria71-png.github.io/smart-revision-hub/`
+3. أضف العنوان نفسه إلى **Redirect URLs** واحفظ.
+
+### إعداد Google OAuth
+
+يلزم إنشاء بيانات OAuth في حساب Google ثم حفظها في لوحة Supabase؛ لا يحتاج الموقع إلى Client Secret في ملفاته.
+
+1. افتح [Google Cloud Console](https://console.cloud.google.com/) وأنشئ OAuth Client من نوع **Web application**.
+2. في **Authorized JavaScript origins** أضف:
+   `https://bouafiazakaria71-png.github.io`
+3. في **Authorized redirect URIs** أضف عنوان Callback الذي يعرضه Supabase في **Authentication → Sign In / Providers → Google**. لمشروعك يكون عادةً:
+   `https://fxrfxilxbxrkxadgfkxw.supabase.co/auth/v1/callback`
+   استخدم القيمة التي يعرضها Supabase إذا اختلفت.
+4. أنشئ OAuth Client وانسخ **Client ID** و**Client Secret**.
+5. ارجع إلى Supabase وافتح **Authentication → Sign In / Providers → Google**، فعّل Google، ثم أدخل Client ID وClient Secret واحفظ.
+6. إذا كان تطبيق Google في وضع الاختبار، أضف حسابات الاختبار المسموح لها بتجربة الدخول في إعدادات Google OAuth.
+
+بعد حفظ الإعدادات، افتح الموقع واضغط «المتابعة باستخدام Google» لاختبار تسجيل الدخول. لا ترسل Client Secret أو كلمات المرور أو مفاتيح Secret إلى أي شخص.
+
+## حساب المسؤول
+
+بعد إنشاء حسابك وتأكيد البريد الإلكتروني، عيّن حسابك مسؤولًا من **SQL Editor** باستخدام الاستعلام الموجود في نهاية `supabase-schema.sql` بعد استبدال `YOUR_ADMIN_EMAIL` ببريد حسابك. نفّذ هذا الاستعلام بنفسك من لوحة Supabase، ولا تمنح دور المسؤول لأي حساب آخر دون حاجة.
 
 ## مكوّنات الأمان
 
@@ -37,7 +56,7 @@
 - صلاحية المسؤول تُقرأ من جدول profiles، وعمليات إضافة الموارد محمية بسياسات RLS في قاعدة البيانات.
 - تغيير دور المستخدم محظور من واجهة المستخدم بواسطة trigger. غيّر الدور إداريًا من SQL Editor فقط.
 - استخدم HTTPS، فعّل تأكيد البريد، واضبط قيود كلمات المرور والحماية من إساءة الاستخدام في إعدادات Supabase.
-- لا توجد خدمة ذكاء اصطناعي حقيقية مفعّلة بعد؛ المساعد الحالي يوضح ذلك ولا يدّعي أنه يرسل الأسئلة إلى نموذج خارجي. ربط الذكاء الاصطناعي يتطلب خادمًا/Edge Function يحفظ المفتاح السري بعيدًا عن المتصفح.
+- لا توجد خدمة ذكاء اصطناعي حقيقية مفعّلة بعد؛ المساعد الحالي واجهة إرشادية فقط. ربط الذكاء الاصطناعي يتطلب خادمًا/Edge Function يحفظ المفتاح السري بعيدًا عن المتصفح.
 
 ## الملفات
 
@@ -48,4 +67,4 @@
 ## ملاحظات
 
 - لا تضع بيانات حقيقية أو أسرارًا في المستودع العام.
-- قبل إطلاق المنصة للجمهور، اختبر التسجيل وتأكيد البريد واستعادة كلمة المرور وتسجيل الخروج وصلاحيات المسؤول على مشروع Supabase منفصل.
+- قبل إطلاق المنصة للجمهور، اختبر التسجيل وتأكيد البريد واستعادة كلمة المرور وتسجيل الخروج وصلاحيات المسؤول.
