@@ -19,9 +19,15 @@
    - `SUPABASE_URL`
    - `SUPABASE_ANON_KEY`
 4. في Supabase افتح **SQL Editor** ونفّذ كامل محتوى `supabase-schema.sql`.
-5. من **Authentication → URL Configuration** أضف رابط GitHub Pages إلى Site URL وRedirect URLs. أضف أيضًا رابط الموقع مع المسار `/*` إن طلبت الواجهة ذلك.
-6. أنشئ حسابك من الموقع، وأكّد بريدك الإلكتروني.
-7. عيّن حسابك مسؤولًا من SQL Editor بعد استبدال البريد في الاستعلام الموجود أسفل `supabase-schema.sql`.
+5. من **Authentication → URL Configuration** ضع رابط GitHub Pages في **Site URL** وأضفه ضمن **Redirect URLs** بهذا الشكل: `https://bouafiazakaria71-png.github.io/smart-revision-hub/`.
+6. لتفعيل الدخول بحساب Google:
+   - افتح [Google Cloud Console](https://console.cloud.google.com/) وأنشئ OAuth Client من نوع **Web application**.
+   - في **Authorized redirect URIs** أضف عنوان **Callback URL** الذي يعرضه Supabase في صفحة **Authentication → Providers → Google** (يكون عادةً `https://<project-ref>.supabase.co/auth/v1/callback`). لا تستخدم رابط GitHub Pages هنا.
+   - فعّل مزوّد **Google** في Supabase، ثم أدخل **Client ID** و**Client Secret** اللذين أنشأهما Google واحفظهما في إعدادات Supabase فقط. لا تضع Client Secret في `config.js` أو GitHub.
+   - أضف رابط GitHub Pages أعلاه إلى **Redirect URLs** في Supabase حتى يسمح بالعودة إلى الموقع بعد نجاح تسجيل الدخول.
+   - إذا كان تطبيق OAuth في وضع الاختبار، أضف حساب Google الذي سيختبر الدخول ضمن **Test users** في Google Cloud Console.
+7. أنشئ حسابًا بالبريد الإلكتروني من الموقع عند الحاجة، وأكّد بريدك الإلكتروني.
+8. عيّن حسابك مسؤولًا من SQL Editor بعد استبدال البريد في الاستعلام الموجود أسفل `supabase-schema.sql`.
 
 ## مكوّنات الأمان
 
