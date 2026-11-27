@@ -2,8 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#0b1020"><meta name="description" content="راجع بذكاء — منصتك الجزائرية للمراجعة والتحضير للامتحانات الرسمية.">
-<title>راجع بذكاء | منصتك التعليمية</title>
+<meta name="theme-color" content="#0b1830"><meta name="description" content="علي بن أبي طالب — منصة تعليمية للمراجعة وتنمية المعرفة ودعم تلاميذ التعليم الثانوي في الجزائر.">
+<title>علي بن أبي طالب | منصة تعليمية</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -141,58 +141,62 @@ body{background:radial-gradient(ellipse at 78% -8%,#24517b55,transparent 42%),ra
   outline:3px solid #55dfc5;
   outline-offset:3px;
 }
+
+/* الهوية البصرية الجديدة — علي بن أبي طالب */
+:root{--bg:#071426;--panel:#0e2038;--panel2:#142b49;--line:#294360;--text:#f4f7fc;--muted:#b2c1d3;--brand:#45d6b2;--brand2:#75a9f5;--gold:#e8bd70;--shadow:0 24px 70px #02081770}
+:root.light{--bg:#f4f7fb;--panel:#fff;--panel2:#eaf1f8;--line:#d8e2ee;--text:#14243b;--muted:#61738a;--brand:#087f70;--brand2:#326bb7;--gold:#a87525;--shadow:0 18px 50px #1a355018}
+body{background:radial-gradient(ellipse at 78% -8%,#1d527255,transparent 43%),radial-gradient(ellipse at 5% 38%,#0e66502a,transparent 34%),var(--bg)}
+.logo{background:linear-gradient(145deg,#55dfc0,#7eaff5);color:#092139;border-radius:16px}
+.logo svg{width:30px;height:30px}
+.brand{font-size:17px;letter-spacing:.1px}
+.brand small{font-size:11px;letter-spacing:.2px}
+.navlinks a{font-weight:600}
+.eyebrow{color:#78e5ce;background:#45d6b214;border-color:#45d6b24a}
+.eyebrowMark{color:var(--gold);font-size:18px}
+.hero{grid-template-columns:1.05fr .95fr;gap:54px;padding-top:70px;min-height:590px}
+.hero h1{font-size:clamp(38px,4.8vw,61px);line-height:1.42;letter-spacing:-1.2px}
+.hero p{font-size:17px;line-height:2.1;max-width:600px}
+.gradient{background:linear-gradient(90deg,#53dfc0,#e8bd70 90%);background-clip:text;color:transparent}
+.btn.primary{background:linear-gradient(115deg,#51dfc0,#82b5f5);color:#071d2b;box-shadow:0 10px 28px #45d6b22b}
+.btn.primary:hover{box-shadow:0 14px 34px #45d6b244}
+.photoHero{min-height:450px;position:relative;display:block;isolation:isolate;padding:10px 14px 22px}
+.photoFrame{position:absolute;inset:10px 18px 30px 28px;border:1px solid #ffffff2b;border-radius:30px;overflow:hidden;box-shadow:0 30px 70px #0006;transform:rotate(-2deg);background:#142b49}
+.photoFrame>img{width:100%;height:100%;object-fit:cover;display:block}
+.photoShade{position:absolute;inset:0;background:linear-gradient(180deg,#07142605 38%,#071426d9 100%)}
+.photoCaption{position:absolute;right:22px;bottom:22px;left:22px;display:flex;align-items:center;gap:12px;color:#fff}
+.photoCaptionIcon{width:42px;height:42px;display:grid;place-items:center;border-radius:14px;background:#45d6b2;color:#08243a;font-size:22px}
+.photoCaption strong,.photoCaption small{display:block}.photoCaption strong{font-size:17px}.photoCaption small{font-size:12px;color:#d5e3ef}
+.photoMini{position:absolute;left:-4px;bottom:4px;width:158px;padding:7px;background:#fff;border:1px solid #ffffff80;border-radius:19px;box-shadow:0 18px 42px #0005;transform:rotate(4deg)}
+.photoMini img{display:block;width:100%;height:100px;object-fit:cover;border-radius:13px}
+.photoMini span{display:block;color:#152c45;font-size:11px;font-weight:700;text-align:center;padding:5px 0 2px}
+.photoSeal{position:absolute;top:0;right:0;width:112px;height:112px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(145deg,#eac77e,#b98742);color:#182c43;border:7px solid #0d2038;box-shadow:0 12px 30px #0004;transform:rotate(8deg)}
+.photoSeal strong{font-size:25px;line-height:1.3}.photoSeal small{font-size:9px;font-weight:700}
+.stats{gap:16px}
+.stat{border-top:2px solid #45d6b277}
+.stat strong{color:var(--brand)}
+.feature .emoji{font-size:24px}
+.feature:nth-child(2) .emoji{background:#75a9f51c}.feature:nth-child(3) .emoji{background:#e8bd701c}
+.sectionHead h2{letter-spacing:-.4px}
+.card,.level,.stat{backdrop-filter:blur(8px)}
+.footer{border-top-color:#ffffff18}
+@media(max-width:850px){.hero{grid-template-columns:1fr;gap:10px;padding-top:48px}.photoHero{min-height:380px;width:min(100%,560px);margin:0 auto}.photoFrame{inset:12px 18px 24px 26px}}
+@media(max-width:560px){.hero{padding-top:35px}.hero h1{font-size:36px}.hero p{font-size:15px}.photoHero{min-height:290px;padding:6px}.photoFrame{inset:12px 12px 23px 22px;border-radius:22px}.photoCaption{right:13px;bottom:13px;left:13px}.photoCaption strong{font-size:14px}.photoCaption small{font-size:10px}.photoMini{width:116px;left:0;bottom:0;padding:5px;border-radius:14px}.photoMini img{height:70px}.photoMini span{font-size:9px}.photoSeal{width:83px;height:83px;border-width:5px;right:0;top:0}.photoSeal strong{font-size:19px}.photoSeal small{font-size:7px}.heroBtns .btn{min-width:0}}
+@media(prefers-reduced-motion:reduce){.photoFrame,.photoMini,.photoSeal{transform:none}}
+
 </style>
 </head>
 <body>
 <header class="topbar"><div class="wrap nav">
-<a class="brand" href="#home"><span class="logo">✦</span><span>راجع بذكاء<small>منصتك التعليمية الجزائرية</small></span></a>
+<a class="brand" href="#home"><span class="logo" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M24 5 29 18 43 24 29 30 24 43 19 30 5 24 19 18Z" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="24" cy="24" r="5" fill="currentColor"/></svg></span><span>علي بن أبي طالب<small>منصة المعرفة والتعلّم</small></span></a>
 <nav class="navlinks" id="navlinks"><a href="#home">الرئيسية</a><a href="#features">المميزات</a><a href="#levels">المستويات</a><a href="#library">المكتبة</a><a href="#assistant">المساعد</a><a href="#adminPanel" id="adminNavLink" class="hide">إدارة المحتوى</a></nav>
 <div class="actions"><button class="iconbtn" id="themeBtn" aria-label="تبديل المظهر">☀</button><button class="btn small ghost authBtn" id="loginOpen">دخول</button><button class="btn small primary authBtn" id="signupOpen">إنشاء حساب</button><button class="iconbtn menu" id="menuBtn" aria-label="القائمة">☰</button><button class="btn small hide" id="logoutBtn">خروج</button></div>
 </div></header>
 <main>
 <section class="wrap adminWelcome" id="adminWelcome" aria-live="polite"><div class="welcomeIcon">✦</div><div><strong id="adminWelcomeTitle">مرحباً بك في حساب المسؤول زكريا</strong><span>لوحة التحكم وإدارة المحتوى أصبحت متاحة لك.</span></div></section>
-<section class="wrap hero" id="home"><div><span class="eyebrow">✦ تعلّم بذكاء، وتقدّم بثقة</span><h1>طريقك إلى التفوق يبدأ من <span class="gradient">هنا.</span></h1><p>منصة مراجعة منظمة لتلاميذ التعليم الثانوي في الجزائر، تجمع الدروس والتمارين والحوليات في تجربة بسيطة وسريعة.</p><div class="heroBtns"><button class="btn primary" id="heroStart">ابدأ المراجعة <span>←</span></button><a class="btn" href="#library">استكشف المكتبة</a></div><div class="notice hide" id="configNotice">يعمل الموقع بوضع العرض حاليًا. لتفعيل الحسابات والحفظ السحابي، أكمل إعداد Supabase كما هو موضح في ملف README.</div></div><div class="heroArt" role="img" aria-label="رسم تعليمي لكتاب مفتوح ومصباح أفكار وأدوات دراسة">
-  <div class="heroGlow"></div>
-  <div class="learningArt">
-    <div class="artBadge artBadgeTop">✦ تعلّم بذكاء</div>
-    <svg viewBox="0 0 560 440" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <defs>
-        <linearGradient id="bookA" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#64e4c3"/><stop offset="1" stop-color="#2ba98e"/></linearGradient>
-        <linearGradient id="bookB" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#84b7ff"/><stop offset="1" stop-color="#477bd1"/></linearGradient>
-        <linearGradient id="lamp" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffe5a0"/><stop offset="1" stop-color="#ffb95f"/></linearGradient>
-        <filter id="soft"><feGaussianBlur stdDeviation="18"/></filter>
-      </defs>
-      <circle cx="284" cy="215" r="168" fill="#65d9bd" opacity=".10"/>
-      <circle cx="284" cy="215" r="125" fill="#75aaff" opacity=".10"/>
-      <circle cx="285" cy="210" r="190" stroke="#8ab7ff" stroke-opacity=".22" stroke-width="1.5" stroke-dasharray="5 11" fill="none"/>
-      <path d="M93 303c56-35 96-34 145-7 26 14 43 15 69 0 45-26 89-28 160 9v47c-70-34-117-35-160-9-26 15-43 14-69 0-49-27-89-28-145 7z" fill="#0b1427" opacity=".18"/>
-      <g transform="translate(105 145) rotate(-7 170 100)">
-        <path d="M22 27c49-20 99-16 151 13v165c-52-29-102-33-151-13z" fill="url(#bookA)" stroke="#d8fff3" stroke-opacity=".7" stroke-width="3"/>
-        <path d="M173 40c52-29 102-33 151-13v165c-49-20-99-16-151 13z" fill="url(#bookB)" stroke="#e3edff" stroke-opacity=".8" stroke-width="3"/>
-        <path d="M173 40v165" stroke="#f2fffb" stroke-width="5" stroke-linecap="round"/>
-        <path d="M47 67c34-10 67-7 99 9M47 94c34-10 67-7 99 9M47 121c34-10 67-7 99 9M199 80c34-17 67-21 100-13M199 108c34-17 67-21 100-13M199 136c34-17 67-21 100-13" stroke="#fff" stroke-opacity=".72" stroke-width="5" stroke-linecap="round" fill="none"/>
-      </g>
-      <g transform="translate(345 45)">
-        <circle cx="58" cy="58" r="47" fill="url(#lamp)" opacity=".22" filter="url(#soft)"/>
-        <path d="M58 12c-27 0-45 20-45 44 0 17 9 27 20 39 6 7 8 14 8 22h34c0-8 2-15 8-22 11-12 20-22 20-39 0-24-18-44-45-44z" fill="url(#lamp)" stroke="#fff0c8" stroke-width="3"/>
-        <path d="M43 119h30M45 130h26M49 140h18" stroke="#ffcb79" stroke-width="7" stroke-linecap="round"/>
-        <path d="M58-4v-18M8 15L-4 3M108 15l12-12M-4 60h-18M120 60h18" stroke="#ffd78e" stroke-width="5" stroke-linecap="round"/>
-      </g>
-      <g transform="translate(60 70) rotate(-12)">
-        <rect width="100" height="72" rx="17" fill="#fff" fill-opacity=".10" stroke="#a9c7ff" stroke-opacity=".55"/>
-        <path d="M23 49V34l14-10 13 7 20-17" stroke="#7edec5" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        <circle cx="70" cy="14" r="5" fill="#7edec5"/>
-      </g>
-      <g transform="translate(402 285) rotate(8)">
-        <rect width="93" height="67" rx="15" fill="#fff" fill-opacity=".10" stroke="#a9c7ff" stroke-opacity=".55"/>
-        <path d="M23 20h47M23 34h47M23 48h31" stroke="#b7d1ff" stroke-width="5" stroke-linecap="round"/>
-        <circle cx="75" cy="48" r="5" fill="#70dfc1"/>
-      </g>
-      <path d="M104 370c88 24 254 25 346-2" stroke="#74ddc2" stroke-opacity=".35" stroke-width="3" stroke-linecap="round" fill="none"/>
-    </svg>
-    <div class="artBadge artBadgeBottom">📘 دروس • تمارين • اختبارات</div>
-  </div>
-  <div class="float f1">🎯 خطتك نحو التفوق</div><div class="float f2">✧ تعلّم • طبّق • أتقن</div>
+<section class="wrap hero" id="home"><div><span class="eyebrow"><span class="eyebrowMark">✦</span> منصة تعليمية متكاملة للمرحلة الثانوية</span><h1>بالعلم نرتقي، وبالمعرفة نصنع <span class="gradient">المستقبل.</span></h1><p>مساحة تعليمية تجمع الدروس والتمارين والحوليات والمراجعة الذكية، لترافق التلميذ في رحلته نحو الفهم والتميّز والنجاح.</p><div class="heroBtns"><button class="btn primary" id="heroStart">اكتشف المنصة <span>←</span></button><a class="btn" href="#library">تصفّح المكتبة</a></div><div class="notice hide" id="configNotice">يعمل الموقع بوضع العرض حاليًا. لتفعيل الحسابات والحفظ السحابي، أكمل إعداد Supabase كما هو موضح في ملف README.</div></div><div class="heroArt photoHero" role="img" aria-label="طلاب يتعاونون في الدراسة داخل فصل تعليمي">
+  <div class="photoFrame"><img src="https://images.unsplash.com/photo-1529390079861-591de354faf5?auto=format&fit=crop&w=1200&q=85" alt="طلاب يتعلمون ويتعاونون في الفصل" fetchpriority="high"><div class="photoShade"></div><div class="photoCaption"><span class="photoCaptionIcon">✦</span><span><strong>معاً نحو التميّز</strong><small>بيئة تعليمية تشجّع على الفهم والإنجاز</small></span></div></div>
+  <div class="photoMini"><img src="https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=600&q=80" alt="قاعة دراسية حديثة" loading="lazy"><span>التعلّم يصنع الفرص</span></div>
+  <div class="photoSeal"><strong>عِلْم</strong><small>طموح • معرفة • إنجاز</small></div>
 </div></section>
 <div class="wrap stats"><div class="stat"><strong>3</strong><span>مستويات ثانوية</span></div><div class="stat"><strong>∞</strong><span>فرص للتعلّم والتطور</span></div><div class="stat"><strong>24/7</strong><span>مكتبتك في أي وقت</span></div></div>
 <section class="wrap section" id="features"><div class="sectionHead"><div><h2>كل ما تحتاجه في مكان واحد</h2><p>أدوات تساعدك على تنظيم المراجعة دون تعقيد.</p></div></div><div class="grid"><article class="card feature"><span class="emoji">📘</span><h3>مكتبة دراسية</h3><p>تصفح الموارد حسب المستوى والشعبة والمادة.</p></article><article class="card feature"><span class="emoji">🧭</span><h3>مسار واضح</h3><p>اختر مستواك وشعبتك للوصول إلى المحتوى المناسب.</p></article><article class="card feature"><span class="emoji">💬</span><h3>مساعد المراجعة</h3><p>مساعد دراسي يشرح الدروس ويجيب عن أسئلة الطلاب.</p></article></div></section>
@@ -241,7 +245,7 @@ body{background:radial-gradient(ellipse at 78% -8%,#24517b55,transparent 42%),ra
 </section>
 <section class="wrap section" id="account"><div class="card profile"><div class="avatar" id="avatar">ز</div><div style="flex:1"><strong id="accountTitle">مساحة التلميذ</strong><div id="accountSub" style="color:var(--muted);font-size:13px">سجّل الدخول لمزامنة حسابك وبياناتك.</div></div><button class="btn small" id="accountAction">تسجيل الدخول</button></div></section>
 </main>
-<footer class="footer"><div class="wrap footerInner"><span>© <span id="year"></span> راجع بذكاء — صُممت لدعم التلميذ الجزائري.</span><span>التعلّم رحلة، وكل خطوة تصنع فرقًا.</span></div></footer>
+<footer class="footer"><div class="wrap footerInner"><span>© <span id="year"></span> علي بن أبي طالب — منصة تعليمية لدعم التلميذ الجزائري.</span><span>التعلّم رحلة، وكل خطوة تصنع فرقًا.</span></div></footer>
 <div class="modal" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle"><div class="dialog"><div class="dialogHead"><h2 id="authTitle">مرحبًا بك</h2><button class="iconbtn" data-close="authModal" aria-label="إغلاق">✕</button></div><p id="authDesc">أنشئ حسابك أو سجّل الدخول للمتابعة.</p><div class="tabs"><button class="active" data-auth-tab="login">تسجيل الدخول</button><button data-auth-tab="signup">إنشاء حساب</button></div>
 <form class="form" id="authForm"><label id="nameWrap" class="hide">الاسم الكامل<input class="field" id="fullName" maxlength="80" autocomplete="name"></label><label>البريد الإلكتروني<input class="field" id="email" type="email" autocomplete="email" required maxlength="254"></label><label>كلمة المرور<input class="field" id="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128"></label><label id="streamWrap" class="hide">الشعبة<select class="field" id="stream"><option value="">اختر شعبتك</option><option>علوم تجريبية</option><option>رياضيات</option><option>تقني رياضي</option><option>آداب وفلسفة</option><option>تسيير واقتصاد</option><option>لغات أجنبية</option><option>علوم وتكنولوجيا</option><option>آداب</option></select></label><button class="btn primary" id="authSubmit" type="submit">دخول</button><div class="oauthDivider">أو</div><button class="btn googleBtn" id="googleAuthBtn" type="button"><span class="googleMark" aria-hidden="true">G</span> المتابعة باستخدام Google</button><button class="btn ghost small" type="button" id="forgotBtn">نسيت كلمة المرور؟</button></form></div></div>
 <div class="modal" id="resourceModal" role="dialog" aria-modal="true" aria-labelledby="resourceTitle"><div class="dialog wide"><div class="dialogHead"><h2 id="resourceTitle">إضافة محتوى جديد</h2><button class="iconbtn" data-close="resourceModal">✕</button></div>
