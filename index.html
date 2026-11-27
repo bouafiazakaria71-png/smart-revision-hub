@@ -619,6 +619,17 @@ function handleAdminRoute(){
  $("adminPanel").classList.remove("hide");
  $("adminPanel").scrollIntoView({behavior:"smooth",block:"start"});
 }
+async function readAllPages(queryFactory,pageSize=500){
+ const rows=[];
+ for(let offset=0;;offset+=pageSize){
+  const {data,error}=await queryFactory().range(offset,offset+pageSize-1);
+  if(error)return {data:null,error};
+  const page=data||[];
+  rows.push(...page);
+  if(page.length<pageSize)break;
+ }
+ return {data:rows,error:null};
+}
 async function loadResources(){
  if(!supabase){resources=[];studyQuestions=[];await loadLessonProgress();renderResources([]);return}
  const resourceResult=await readAllPages(
