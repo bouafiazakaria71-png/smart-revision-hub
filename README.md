@@ -6,11 +6,13 @@
 
 الموقع واجهة ثابتة منشورة عبر Cloudflare Pages، وملف الدخول هو `index.html`.
 
-- رابط الطلاب والعامة: https://ali-ibn-abi-talib-smart-revision-hub.pages.dev/
-- بوابة المسؤول: https://ali-ibn-abi-talib-smart-revision-hub.pages.dev/admin/
-- المساران يستخدمان التطبيق نفسه؛ بوابة المسؤول لا تمنح صلاحية المسؤول تلقائياً. يجب تسجيل الدخول بحساب يحمل دور `admin` في Supabase.
+- رابط الطلاب: https://ali-ibn-abi-talib-smart-revision-hub.pages.dev/student/
+- رابط المسؤول: https://ali-ibn-abi-talib-smart-revision-hub.pages.dev/admin/
+- العنوان الأساسي `/` يحوّل الزائر تلقائياً إلى بوابة الطلاب.
+- بوابة الطلاب لا تعرض لوحة المسؤول أو أدوات الإدارة حتى لو كان المسؤول قد سجّل الدخول من الجهاز نفسه.
+- بوابة المسؤول لا تسمح بإنشاء حساب جديد؛ تتطلب تسجيل الدخول بحساب يحمل دور `admin` في جدول `profiles`. أي حساب طالب يحاول فتحها يُعاد إلى بوابة الطلاب.
 
-في Cloudflare Pages، اربط المستودع `bouafiazakaria71-png/smart-revision-hub` بفرع `main`، واجعل مجلد ملفات النشر `/` أو `.` دون أمر بناء. ملف `_redirects` في جذر المستودع ينقل `/admin/` إلى واجهة الموقع مع فتح لوحة المسؤول بعد التحقق من دور الحساب.
+في Cloudflare Pages، اربط المستودع `bouafiazakaria71-png/smart-revision-hub` بفرع `main`، واجعل مجلد ملفات النشر `/` أو `.` دون أمر بناء. يعتمد المساران `/student/` و`/admin/` على توجيه SPA الافتراضي في Cloudflare Pages؛ لا تضف ملف `404.html` في جذر النشر لأنه يعطّل هذا السلوك.
 
 ## ربط Supabase (تم إعداد ملفات الموقع)
 
@@ -27,9 +29,11 @@
 ### إعداد عناوين العودة في Supabase
 
 1. افتح **Authentication → URL Configuration**.
-2. ضع عنوان الموقع العام التالي في **Site URL**:
-   `https://ali-ibn-abi-talib-smart-revision-hub.pages.dev/`
-3. أضف العنوان نفسه إلى **Redirect URLs** واحفظ.
+2. ضع بوابة الطلاب في **Site URL**:
+   `https://ali-ibn-abi-talib-smart-revision-hub.pages.dev/student/`
+3. أضف العنوانين التاليين إلى **Redirect URLs** واحفظ:
+   - `https://ali-ibn-abi-talib-smart-revision-hub.pages.dev/student/`
+   - `https://ali-ibn-abi-talib-smart-revision-hub.pages.dev/admin/`
 
 ### إعداد Google OAuth
 
