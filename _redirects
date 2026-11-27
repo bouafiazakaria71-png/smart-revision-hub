@@ -1,4 +1,6 @@
-# بوابة الطلاب هي العنوان العام، وبوابة المسؤول مسار منفصل
+# Main URL sends visitors to the student portal
 / /student/ 302
 /admin /admin/ 301
 /student /student/ 301
+/admin/ / 200
+/student/ / 200
