@@ -61,6 +61,43 @@ body{background:radial-gradient(ellipse at 78% -8%,#24517b55,transparent 42%),ra
 @media(max-width:560px){.wrap{width:calc(100% - 24px)}.nav{height:68px}.hero{padding:38px 0 20px}.hero h1{font-size:38px;letter-spacing:-1px}.hero p{font-size:15px}.heroArt{min-height:255px}.learningArt{width:100%}.artBadge{font-size:10px;padding:7px 10px}.f1{top:5%;right:0}.f2{bottom:3%;left:0}.float{font-size:11px;padding:8px 10px}.stats{margin:8px 0 38px}.stat{padding:13px 10px}.section{padding:28px 0 40px}.sectionHead h2{font-size:24px}.feature{min-height:0}.profile{padding:16px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 
+
+/* إعادة تصميم تعليمية واضحة وحركة الرسم */
+.adminWelcome{display:none;margin:22px auto 0;padding:18px 22px;border:1px solid #66e0c255;border-radius:20px;background:linear-gradient(110deg,#123c3b,#172d4b 70%,#20345a);box-shadow:0 18px 45px #0003;align-items:center;gap:14px}
+.adminWelcome.show{display:flex;animation:welcomeIn .55s cubic-bezier(.2,.8,.2,1) both}
+.adminWelcome .welcomeIcon{width:48px;height:48px;flex:none;border-radius:16px;background:#66e0c222;display:grid;place-items:center;font-size:25px}
+.adminWelcome strong{display:block;font-size:18px;color:#eafff8}
+.adminWelcome span{display:block;color:#c0d8e9;font-size:13px}
+@keyframes welcomeIn{from{opacity:0;transform:translateY(-12px) scale(.985)}to{opacity:1;transform:none}}
+/* الحركة الهادئة للعناصر داخل الرسم */
+.learningArt svg>circle:first-of-type{transform-box:fill-box;transform-origin:center;animation:haloPulse 5s ease-in-out infinite}
+.learningArt svg>circle:nth-of-type(2){transform-box:fill-box;transform-origin:center;animation:haloPulse 6s ease-in-out infinite reverse}
+.learningArt svg>g:nth-of-type(1){transform-box:fill-box;transform-origin:center;animation:bookFloat 4.8s ease-in-out infinite}
+.learningArt svg>g:nth-of-type(2){transform-box:fill-box;transform-origin:center;animation:lampFloat 4.2s ease-in-out infinite}
+.learningArt svg>g:nth-of-type(3),.learningArt svg>g:nth-of-type(4){transform-box:fill-box;transform-origin:center;animation:cardDrift 5.5s ease-in-out infinite}
+.artBadgeTop{animation:badgeBob 4s ease-in-out infinite}
+.artBadgeBottom{animation:badgeBob 4.8s ease-in-out infinite reverse}
+@keyframes haloPulse{0%,100%{opacity:.10;transform:scale(.96)}50%{opacity:.2;transform:scale(1.05)}}
+@keyframes bookFloat{0%,100%{transform:translateY(0) rotate(-.5deg)}50%{transform:translateY(-10px) rotate(.5deg)}}
+@keyframes lampFloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-13px) rotate(3deg)}}
+@keyframes cardDrift{0%,100%{translate:0 0}50%{translate:0 -9px}}
+@keyframes badgeBob{0%,100%{translate:0 0}50%{translate:0 -7px}}
+/* تنظيم شريط التنقل والأزرار */
+.actions{gap:10px}
+.actions #logoutBtn{order:0}
+.actions #loginOpen{order:1}
+.actions #signupOpen{order:2}
+.actions #themeBtn{order:3}
+.actions #menuBtn{order:4}
+.heroBtns{align-items:center}
+.heroBtns .btn{min-width:158px}
+.heroArt{overflow:visible}
+.learningArt{animation:artEntrance .9s cubic-bezier(.2,.8,.2,1) both}
+@keyframes artEntrance{from{opacity:0;transform:translateY(18px) scale(.96)}to{opacity:1;transform:none}}
+.stat,.feature,.level,.resource{transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}
+@media(max-width:560px){.adminWelcome{padding:14px;margin-top:12px}.adminWelcome strong{font-size:15px}.adminWelcome span{font-size:11px}.heroBtns .btn{flex:1;min-width:0}}
+@media(prefers-reduced-motion:reduce){.learningArt,.learningArt *, .adminWelcome.show{animation:none!important}}
+
 </style>
 </head>
 <body>
@@ -70,6 +107,7 @@ body{background:radial-gradient(ellipse at 78% -8%,#24517b55,transparent 42%),ra
 <div class="actions"><button class="iconbtn" id="themeBtn" aria-label="تبديل المظهر">☀</button><button class="btn small ghost authBtn" id="loginOpen">دخول</button><button class="btn small primary authBtn" id="signupOpen">إنشاء حساب</button><button class="iconbtn menu" id="menuBtn" aria-label="القائمة">☰</button><button class="btn small hide" id="logoutBtn">خروج</button></div>
 </div></header>
 <main>
+<section class="wrap adminWelcome" id="adminWelcome" aria-live="polite"><div class="welcomeIcon">✦</div><div><strong id="adminWelcomeTitle">مرحباً بك في حساب المسؤول زكريا</strong><span>لوحة التحكم وإدارة المحتوى أصبحت متاحة لك.</span></div></section>
 <section class="wrap hero" id="home"><div><span class="eyebrow">✦ تعلّم بذكاء، وتقدّم بثقة</span><h1>طريقك إلى التفوق يبدأ من <span class="gradient">هنا.</span></h1><p>منصة مراجعة منظمة لتلاميذ التعليم الثانوي في الجزائر، تجمع الدروس والملخصات والتمارين في تجربة بسيطة وسريعة.</p><div class="heroBtns"><button class="btn primary" id="heroStart">ابدأ المراجعة <span>←</span></button><a class="btn" href="#library">استكشف المكتبة</a></div><div class="notice" id="configNotice">يعمل الموقع بوضع العرض حاليًا. لتفعيل الحسابات والحفظ السحابي، أكمل إعداد Supabase كما هو موضح في ملف README.</div></div><div class="heroArt" role="img" aria-label="رسم تعليمي لكتاب مفتوح ومصباح أفكار وأدوات دراسة">
   <div class="heroGlow"></div>
   <div class="learningArt">
@@ -168,7 +206,7 @@ function safeUrl(value){try{const u=new URL(value);return ["https:","http:"].inc
 function escapeHtml(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function setAuthMode(mode){authMode=mode;document.querySelectorAll("[data-auth-tab]").forEach(b=>b.classList.toggle("active",b.dataset.authTab===mode));$("authTitle").textContent=mode==="login"?"تسجيل الدخول":"إنشاء حساب جديد";$("authDesc").textContent=mode==="login"?"أدخل بيانات حسابك للمتابعة.":"أنشئ حسابًا شخصيًا لمتابعة رحلتك الدراسية."; $("nameWrap").classList.toggle("hide",mode!=="signup");$("streamWrap").classList.toggle("hide",mode!=="signup");$("fullName").required=mode==="signup";$("authSubmit").textContent=mode==="login"?"دخول":"إنشاء الحساب";$("password").autocomplete=mode==="login"?"current-password":"new-password";$("forgotBtn").classList.toggle("hide",mode!=="login")}
 function openAuth(mode="login"){setAuthMode(mode);modal("authModal")}
-function updateAccount(user,role="student",profile=null){currentUser=user;currentRole=role;$("loginOpen").classList.toggle("hide",!!user);$("signupOpen").classList.toggle("hide",!!user);$("logoutBtn").classList.toggle("hide",!user);$("accountAction").textContent=user?"تحديث الملف الشخصي":"تسجيل الدخول";$("accountTitle").textContent=user?(profile?.full_name||user.email):"مساحة التلميذ";$("accountSub").textContent=user?(user.email+" • "+(role==="admin"?"مسؤول المنصة":"حساب تلميذ")):"سجّل الدخول لمزامنة حسابك وبياناتك.";$("avatar").textContent=user?(profile?.full_name||user.email||"م").trim().charAt(0).toUpperCase():"ز";$("addResourceBtn").classList.toggle("hide",role!=="admin");$("adminPanel").classList.toggle("hide",role!=="admin"||!user)}
+function updateAccount(user,role="student",profile=null){currentUser=user;currentRole=role;$("loginOpen").classList.toggle("hide",!!user);$("signupOpen").classList.toggle("hide",!!user);$("logoutBtn").classList.toggle("hide",!user);$("accountAction").textContent=user?"تحديث الملف الشخصي":"تسجيل الدخول";const displayName=(profile?.full_name||user?.user_metadata?.full_name||"").trim();$("accountTitle").textContent=user?(displayName||user.email):"مساحة التلميذ";$("accountSub").textContent=user?(user.email+" • "+(role==="admin"?"مسؤول المنصة":"حساب تلميذ")):"سجّل الدخول لمزامنة حسابك وبياناتك.";$("avatar").textContent=user?(displayName||user.email||"م").trim().charAt(0).toUpperCase():"ز";$("addResourceBtn").classList.toggle("hide",role!=="admin");$("adminPanel").classList.toggle("hide",role!=="admin"||!user);const welcome=$("adminWelcome");if(welcome){welcome.classList.toggle("show",!!user&&role==="admin");$("adminWelcomeTitle").textContent="مرحباً بك في حساب المسؤول "+(displayName||"زكريا")}}
 async function loadProfile(user){let profile=null,role="student";const {data,error}=await supabase.from("profiles").select("full_name,stream,role,email").eq("id",user.id).maybeSingle();if(error)console.warn("profile",error.message);if(data){profile=data;role=data.role||"student"}updateAccount(user,role,profile);if(role==="admin")await loadStudents()}
 async function loadResources(){if(!supabase){renderResources([]);return}const {data,error}=await supabase.from("study_resources").select("id,title,subject,level,stream,kind,description,file_url,video_url,questions,created_at").order("created_at",{ascending:false}).limit(100);if(error){console.error(error);toast("تعذر تحميل المكتبة. تحقق من تحديث قاعدة البيانات وسياسات الوصول.");renderResources([]);return}resources=data||[];renderResources(resources)}
 function renderResources(items){
