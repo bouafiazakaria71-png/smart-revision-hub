@@ -4,10 +4,13 @@
 
 ## تشغيل الموقع
 
-الموقع واجهة ثابتة مناسبة لـ GitHub Pages. ملف الدخول هو `index.html`.
+الموقع واجهة ثابتة منشورة عبر Cloudflare Pages، وملف الدخول هو `index.html`.
 
-1. افتح إعدادات المستودع في GitHub ثم **Pages** واختر النشر من الفرع `main` والمجلد `/ (root)`.
-2. رابط الموقع: https://bouafiazakaria71-png.github.io/smart-revision-hub/
+- رابط الطلاب والعامة: https://ali-ibn-abi-talib-smart-revision-hub.pages.dev/
+- بوابة المسؤول: https://ali-ibn-abi-talib-smart-revision-hub.pages.dev/admin/
+- المساران يستخدمان التطبيق نفسه؛ بوابة المسؤول لا تمنح صلاحية المسؤول تلقائياً. يجب تسجيل الدخول بحساب يحمل دور `admin` في Supabase.
+
+في Cloudflare Pages، اربط المستودع `bouafiazakaria71-png/smart-revision-hub` بفرع `main`، واجعل مجلد ملفات النشر `/` أو `.` دون أمر بناء. ملف `_redirects` في جذر المستودع ينقل `/admin/` إلى واجهة الموقع مع فتح لوحة المسؤول بعد التحقق من دور الحساب.
 
 ## ربط Supabase (تم إعداد ملفات الموقع)
 
@@ -24,8 +27,8 @@
 ### إعداد عناوين العودة في Supabase
 
 1. افتح **Authentication → URL Configuration**.
-2. ضع عنوان الموقع التالي في **Site URL**:
-   `https://bouafiazakaria71-png.github.io/smart-revision-hub/`
+2. ضع عنوان الموقع العام التالي في **Site URL**:
+   `https://ali-ibn-abi-talib-smart-revision-hub.pages.dev/`
 3. أضف العنوان نفسه إلى **Redirect URLs** واحفظ.
 
 ### إعداد Google OAuth
@@ -34,7 +37,7 @@
 
 1. افتح [Google Cloud Console](https://console.cloud.google.com/) وأنشئ OAuth Client من نوع **Web application**.
 2. في **Authorized JavaScript origins** أضف:
-   `https://bouafiazakaria71-png.github.io`
+   `https://ali-ibn-abi-talib-smart-revision-hub.pages.dev`
 3. في **Authorized redirect URIs** أضف عنوان Callback الذي يعرضه Supabase في **Authentication → Sign In / Providers → Google**. لمشروعك يكون عادةً:
    `https://fxrfxilxbxrkxadgfkxw.supabase.co/auth/v1/callback`
    استخدم القيمة التي يعرضها Supabase إذا اختلفت.
