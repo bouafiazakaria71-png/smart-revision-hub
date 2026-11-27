@@ -1311,7 +1311,7 @@ $("googleAuthBtn").addEventListener("click",async()=>{if(!supabase)return toast(
 $("forgotBtn").addEventListener("click",async()=>{if(!supabase)return toast("أكمل إعداد Supabase أولًا.");const email=$("email").value.trim();if(!email)return toast("اكتب بريدك الإلكتروني أولًا.");const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});toast(error?"تعذر إرسال رابط الاستعادة: "+error.message:"إذا كان البريد مسجلًا، سيصلك رابط استعادة كلمة المرور.")});
 document.querySelectorAll("[data-level]").forEach(b=>b.addEventListener("click",async()=>{
  selectedLevel=b.dataset.level;selectedStream=b.dataset.stream;
- syncStudyPathUI();
+ syncStudyPathUI();renderExamSources();
  $("library").scrollIntoView({behavior:"smooth"});
  renderResources(resources);
  await persistStudentStudyPath();
