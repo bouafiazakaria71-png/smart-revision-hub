@@ -766,13 +766,141 @@ function updateResourceFormType(){
  $("resourceTypeHint").textContent=isPastPaper?"ارفع ملف الحولية بصيغة PDF وحدد المادة والمستوى والشعبة.":"أرفق ملف PDF للدرس، ثم أضف أسئلته من بنك الأسئلة التدريبية.";
  $("resFile").required=!$("resId").value;
 }
+const ACADEMIC_LEVELS=["الأولى ثانوي","الثانية ثانوي","الثالثة ثانوي"];
+function formatAdminDate(value){
+ if(!value)return "لم يبدأ بعد";
+ const date=new Date(value);
+ return Number.isNaN(date.getTime())?"—":date.toLocaleString("ar-DZ",{year:"numeric",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});
+}
+function contentForStudent(student,ownProgress=[]){
+ if(!student.level){
+  const ids=new Set(ownProgress.map(p=>p.resource_id));
+  return adminContentData.filter(r=>r.kind!=="حولية"&&ids.has(r.id));
+ }
+ return adminContentData.filter(r=>
+  r.kind!=="حولية" &&
+  r.level===student.level &&
+  (!r.stream || (student.stream && r.stream===student.stream))
+ );
+}
+function getStudentAnalytics(student){
+ const ownProgress=adminProgressData.filter(p=>p.user_id===student.id);
+ const matching=contentForStudent(student,ownProgress);
+ const lessonResources=matching.filter(r=>r.kind==="درس");
+ const progressByResource=new Map(ownProgress.map(p=>[p.resource_id,p]));
+ const completedLessons=lessonResources.filter(r=>!!progressByResource.get(r.id)?.reviewed_at).length;
+ const percent=(student.level&&student.stream&&lessonResources.length)
+  ?Math.min(100,Math.round(completedLessons/lessonResources.length*100)):null;
+ const totalAttempts=ownProgress.reduce((sum,p)=>sum+Math.max(0,Number(p.attempt_count)||0),0);
+ const scores=ownProgress.filter(p=>Number(p.attempt_count)>0&&p.last_score!==null&&p.last_score!==undefined).map(p=>Number(p.last_score)).filter(Number.isFinite);
+ const bestScores=ownProgress.filter(p=>p.best_score!==null&&p.best_score!==undefined).map(p=>Number(p.best_score)).filter(Number.isFinite);
+ const timestamps=ownProgress.map(p=>p.updated_at||p.reviewed_at).filter(Boolean).map(x=>new Date(x).getTime()).filter(Number.isFinite);
+ const lastActivity=timestamps.length?new Date(Math.max(...timestamps)).toISOString():null;
+ return {
+  ownProgress,matching,lessonResources,completedLessons,percent,totalAttempts,
+  averageScore:scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length):null,
+  bestScore:bestScores.length?Math.max(...bestScores):null,
+  lastActivity,reviewedContent:ownProgress.filter(p=>!!p.reviewed_at).length
+ };
+}
+function renderStudentDetails(studentId){
+ if(!hasAdminAccess())return;
+ const student=adminStudentsData.find(x=>x.id===studentId);if(!student)return;
+ const stats=getStudentAnalytics(student);
+ const progressByResource=new Map(stats.ownProgress.map(p=>[p.resource_id,p]));
+ const records=stats.matching.slice().sort((a,b)=>{
+  const left=progressByResource.get(a.id)?.updated_at||"";
+  const right=progressByResource.get(b.id)?.updated_at||"";
+  return right.localeCompare(left);
+ });
+ const panel=$("studentDetailsPanel");
+ const pct=stats.percent===null?"غير متاح":stats.percent+"%";
+ const rows=records.map(resource=>{
+  const p=progressByResource.get(resource.id), reviewed=!!p?.reviewed_at;
+  const lastScore=p?.last_score===null||p?.last_score===undefined?"—":Number(p.last_score)+"%";
+  const bestScore=p?.best_score===null||p?.best_score===undefined?"—":Number(p.best_score)+"%";
+  return '<tr><td>'+escapeHtml(resource.title||"محتوى")+'</td><td>'+escapeHtml([resource.subject,resource.kind].filter(Boolean).join(" • "))+'</td><td>'+(reviewed?'<span class="tag">تمت المراجعة</span>':'<span class="helpText">لم يراجع بعد</span>')+'</td><td>'+Number(p?.attempt_count||0)+'</td><td>'+lastScore+'</td><td>'+bestScore+'</td><td>'+escapeHtml(formatAdminDate(p?.updated_at||p?.reviewed_at))+'</td></tr>';
+ }).join("");
+ panel.innerHTML=
+  '<div class="resourceTop"><div><h4>تفاصيل تقدم: '+escapeHtml(student.full_name||"طالب")+'</h4><p class="studentDetailIntro">'+escapeHtml(student.email||"البريد الإلكتروني غير محفوظ")+' · '+escapeHtml(student.level||"المستوى غير محدد")+' · '+escapeHtml(student.stream||"الشعبة غير محددة")+'</p></div><button class="btn small" type="button" data-close-student-details>إغلاق التفاصيل</button></div>'+
+  '<div class="studentDetailStats">'+
+   '<div class="studentDetailStat"><small>إنجاز الدروس</small><strong>'+pct+'</strong></div>'+
+   '<div class="studentDetailStat"><small>الدروس المكتملة</small><strong>'+stats.completedLessons+'/'+stats.lessonResources.length+'</strong></div>'+
+   '<div class="studentDetailStat"><small>محاولات الاختبار</small><strong>'+stats.totalAttempts+'</strong></div>'+
+   '<div class="studentDetailStat"><small>متوسط آخر النتائج</small><strong>'+(stats.averageScore===null?"—":stats.averageScore+"%")+'</strong></div>'+
+  '</div>'+
+  (stats.percent===null?'<p class="notice">لا يمكن حساب نسبة إنجاز دقيقة حتى يُحدَّد مستوى الطالب وشعبته وتوجد دروس منشورة تناسبهما.</p>':'')+
+  '<div class="adminTableWrap"><table class="adminTable studentDetailsTable"><thead><tr><th>الدرس / المحتوى</th><th>المادة والنوع</th><th>حالة المراجعة</th><th>المحاولات</th><th>آخر نتيجة</th><th>أفضل نتيجة</th><th>آخر نشاط</th></tr></thead><tbody>'+
+  (rows||"")+
+  (records.length?"":'<tr><td colspan="7" class="helpText">لا توجد دروس منشورة مناسبة أو لم يسجل الطالب تقدماً فيها بعد.</td></tr>')+
+  '</tbody></table></div>';
+ panel.classList.remove("hide");
+}
+function renderStudentDashboard(){
+ const metrics=adminStudentsData.map(student=>({student,stats:getStudentAnalytics(student)}));
+ const measurable=metrics.filter(x=>x.stats.percent!==null);
+ const averageProgress=measurable.length?Math.round(measurable.reduce((sum,x)=>sum+x.stats.percent,0)/measurable.length):null;
+ const active=metrics.filter(x=>x.stats.ownProgress.length>0).length;
+ const totalAttempts=metrics.reduce((sum,x)=>sum+x.stats.totalAttempts,0);
+ const summaries=[
+  ["عدد الطلاب",adminStudentsData.length,"الحسابات ذات دور الطالب"],
+  ["بدأوا التعلّم",active,"لديهم سجلات مراجعة أو اختبار"],
+  ["محاولات الاختبار",totalAttempts,"إجمالي المحاولات المحفوظة"],
+  ["متوسط الإنجاز",averageProgress===null?"—":averageProgress+"%","لمن اكتمل تحديد مستواهم وتوفرت دروس"]
+ ];
+ const summaryHtml='<div class="studentAnalyticsStats">'+summaries.map(x=>'<div class="studentMetric"><strong>'+x[1]+'</strong><span>'+x[0]+'</span><small>'+x[2]+'</small></div>').join("")+'</div>';
+ const levelChoices=value=>'<option value="">غير محدد</option>'+ACADEMIC_LEVELS.map(level=>'<option value="'+escapeHtml(level)+'"'+(value===level?' selected':'')+'>'+escapeHtml(level)+'</option>').join("");
+ const tableRows=metrics.map(({student,stats})=>{
+  const percentage=stats.percent===null?"—":stats.percent+"%";
+  const width=stats.percent===null?0:stats.percent;
+  return '<tr data-student-row="'+escapeHtml(student.id)+'">'+
+   '<td><input class="field student-name" maxlength="80" value="'+escapeHtml(student.full_name||"")+'"></td>'+
+   '<td><span class="studentEmail">'+escapeHtml(student.email||"البريد غير محفوظ")+'</span></td>'+
+   '<td><select class="field student-level">'+levelChoices(student.level||"")+'</select></td>'+
+   '<td><input class="field student-stream" maxlength="80" value="'+escapeHtml(student.stream||"")+'" placeholder="الشعبة"></td>'+
+   '<td>'+stats.completedLessons+'/'+stats.lessonResources.length+'</td>'+
+   '<td class="studentProgressCell"><strong>'+percentage+'</strong><div class="studentProgressTrack"><span style="width:'+width+'%"></span></div></td>'+
+   '<td>'+stats.totalAttempts+'</td>'+
+   '<td>'+(stats.averageScore===null?"—":stats.averageScore+"%")+' / '+(stats.bestScore===null?"—":stats.bestScore+"%")+'</td>'+
+   '<td>'+escapeHtml(formatAdminDate(stats.lastActivity))+'</td>'+
+   '<td>'+escapeHtml(formatAdminDate(student.created_at))+'</td>'+
+   '<td><div class="resourceActions"><button class="btn small" type="button" data-view-student="'+escapeHtml(student.id)+'">التفاصيل</button><button class="btn small primary" type="button" data-save-student>حفظ</button></div></td>'+
+  '</tr>';
+ }).join("");
+ $("studentGrid").innerHTML=summaryHtml+
+  '<p class="helpText">نسبة الإنجاز = الدروس المنشورة المناسبة لمستوى الطالب وشعبته التي سجّل إتمام مراجعتها ÷ إجمالي تلك الدروس. لا تُحسب نسبة عند نقص المستوى أو الشعبة أو عدم وجود دروس مناسبة. النتائج المعروضة هي درجات الاختبارات المحفوظة؛ لا تُعرض كلمات المرور.</p>'+
+  (metrics.length?'<div class="adminTableWrap"><table class="adminTable studentTable"><thead><tr><th>اسم الطالب</th><th>البريد الإلكتروني</th><th>المستوى</th><th>الشعبة</th><th>دروس مكتملة</th><th>نسبة الإنجاز</th><th>محاولات الاختبار</th><th>متوسط / أفضل نتيجة</th><th>آخر نشاط دراسي</th><th>تاريخ التسجيل</th><th>الإجراءات</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>':'<div class="empty">لا توجد حسابات طلاب مسجلة حتى الآن. سيظهر كل طالب هنا تلقائيًا بعد إنشاء حساب طالب.</div>');
+ $("studentDetailsPanel").classList.add("hide");
+ $("studentDetailsPanel").innerHTML="";
+}
 async function loadStudents(){
  if(!supabase||!hasAdminAccess())return;
- $("studentGrid").innerHTML='<p class="helpText">تحميل حسابات الطلاب...</p>';
- const {data,error}=await supabase.from("profiles").select("id,email,full_name,stream,created_at,role").eq("role","student").order("created_at",{ascending:false}).limit(200);
- if(error){console.error(error);$("studentGrid").innerHTML='<p class="notice">تعذر تحميل الحسابات. تأكد من تنفيذ ملف تحديث قاعدة البيانات في Supabase.</p>';return}
- if(!data?.length){$("studentGrid").innerHTML='<p class="helpText">لا توجد حسابات طلاب مسجلة حتى الآن.</p>';return}
- $("studentGrid").innerHTML='<div class="adminTableWrap"><table class="adminTable"><thead><tr><th>الاسم</th><th>البريد الإلكتروني</th><th>الشعبة</th><th>تاريخ التسجيل</th><th>الإجراء</th></tr></thead><tbody>'+data.map(s=>'<tr data-student-row="'+escapeHtml(s.id)+'"><td><input class="field student-name" maxlength="80" value="'+escapeHtml(s.full_name||"")+'"></td><td><span class="studentEmail">'+escapeHtml(s.email||"غير متوفر")+'</span></td><td><input class="field student-stream" maxlength="80" value="'+escapeHtml(s.stream||"")+'"></td><td>'+escapeHtml(s.created_at?new Date(s.created_at).toLocaleDateString("ar-DZ"):"—")+'</td><td><button class="btn small" type="button" data-save-student>حفظ</button></td></tr>').join("")+'</tbody></table></div>';
+ ensureAdminAnalyticsRealtime();
+ $("studentGrid").innerHTML='<p class="helpText">تحميل بيانات الطلاب والتقدم الدراسي...</p>';
+ const [profilesResult,progressResult,contentResult]=await Promise.all([
+  supabase.from("profiles").select("id,email,full_name,stream,level,created_at,role").eq("role","student").order("created_at",{ascending:false}).limit(500),
+  supabase.from("lesson_progress").select("user_id,resource_id,reviewed_at,attempt_count,last_score,best_score,updated_at").limit(10000),
+  supabase.from("study_resources").select("id,title,subject,level,stream,kind").order("created_at",{ascending:false}).limit(1000)
+ ]);
+ if(profilesResult.error){
+  console.error("student profiles",profilesResult.error);
+  $("studentGrid").innerHTML='<p class="notice">تعذر تحميل حسابات الطلاب. تحقق من صلاحية المسؤول وسياسات profiles.</p>';
+  return;
+ }
+ if(progressResult.error){
+  console.error("student progress",progressResult.error);
+  $("studentGrid").innerHTML='<p class="notice">تم تحميل الحسابات، لكن تعذر قراءة تقدم الطلاب. تحقق من سياسة القراءة الإدارية لجدول lesson_progress.</p>';
+  return;
+ }
+ if(contentResult.error){
+  console.error("student resources",contentResult.error);
+  $("studentGrid").innerHTML='<p class="notice">تعذر تحميل قائمة الدروس لحساب نسب التقدم.</p>';
+  return;
+ }
+ adminStudentsData=profilesResult.data||[];
+ adminProgressData=progressResult.data||[];
+ adminContentData=contentResult.data||[];
+ renderStudentDashboard();
 }
 async function refreshSession(){if(!supabase){$("configNotice").classList.remove("hide");return}const {data:{session}}=await supabase.auth.getSession();if(session?.user)await loadProfile(session.user);else updateAccount(null);await loadResources();handleAdminRoute();supabase.auth.onAuthStateChange((_event,session)=>{setTimeout(async()=>{if(session?.user)await loadProfile(session.user);else{updateAccount(null);await loadLessonProgress();renderResources(resources);handleAdminRoute()}},0)})}
 $("themeBtn").addEventListener("click",()=>{document.documentElement.classList.toggle("light");localStorage.setItem("rr-theme",document.documentElement.classList.contains("light")?"light":"dark");$("themeBtn").textContent=document.documentElement.classList.contains("light")?"☾":"☀"});
