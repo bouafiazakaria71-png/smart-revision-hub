@@ -225,7 +225,7 @@ body{background:radial-gradient(ellipse at 78% -8%,#1d527255,transparent 43%),ra
 <body>
 <header class="topbar"><div class="wrap nav">
 <a class="brand" href="#home"><span class="logo" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M24 5 29 18 43 24 29 30 24 43 19 30 5 24 19 18Z" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="24" cy="24" r="5" fill="currentColor"/></svg></span><span>علي بن أبي طالب<small>منصة المعرفة والتعلّم</small></span></a>
-<nav class="navlinks" id="navlinks"><a href="#home">الرئيسية</a><a href="#features">المميزات</a><a href="#levels">المستويات</a><a href="#library">المكتبة</a><a href="#assistant">المساعد</a><a href="#adminPanel" id="adminNavLink" class="hide">إدارة المحتوى</a></nav>
+<nav class="navlinks" id="navlinks"><a href="#home">الرئيسية</a><a href="#features">المميزات</a><a href="#levels">المستويات</a><a href="#library">المكتبة</a><a href="#assistant">المساعد</a><a href="/admin/" id="adminNavLink" class="hide">بوابة المسؤول</a></nav>
 <div class="actions"><button class="iconbtn" id="themeBtn" aria-label="تبديل المظهر">☀</button><button class="btn small ghost authBtn" id="loginOpen">دخول</button><button class="btn small primary authBtn" id="signupOpen">إنشاء حساب</button><button class="iconbtn menu" id="menuBtn" aria-label="القائمة">☰</button><button class="btn small hide" id="logoutBtn">خروج</button></div>
 </div></header>
 <main>
@@ -346,7 +346,20 @@ function updateAccount(user,role="student",profile=null){
    assistantHistory=readAssistantHistory(nextUserId||"guest");
   }
  currentUser=user;currentRole=role;$("loginOpen").classList.toggle("hide",!!user);$("signupOpen").classList.toggle("hide",!!user);$("logoutBtn").classList.toggle("hide",!user);$("accountAction").textContent=user?"تحديث الملف الشخصي":"تسجيل الدخول";const displayName=(profile?.full_name||user?.user_metadata?.full_name||"").trim();$("accountTitle").textContent=user?(displayName||user.email):"مساحة التلميذ";$("accountSub").textContent=user?(user.email+" • "+(role==="admin"?"مسؤول المنصة":"حساب تلميذ")):"سجّل الدخول لمزامنة حسابك وبياناتك.";$("avatar").textContent=user?(displayName||user.email||"م").trim().charAt(0).toUpperCase():"ز";$("adminNavLink").classList.toggle("hide",role!=="admin"||!user);$("adminPanel").classList.toggle("hide",role!=="admin"||!user);const welcome=$("adminWelcome");if(welcome){welcome.classList.toggle("show",!!user&&role==="admin");$("adminWelcomeTitle").textContent="مرحباً بك في حساب المسؤول زكريا"}}
-async function loadProfile(user){let profile=null,role="student";const {data,error}=await supabase.from("profiles").select("full_name,stream,role,email").eq("id",user.id).maybeSingle();if(error)console.warn("profile",error.message);if(data){profile=data;role=data.role||"student"}updateAccount(user,role,profile);if(role==="admin")await loadStudents();await loadLessonProgress();renderResources(resources)}
+async function loadProfile(user){let profile=null,role="student";const {data,error}=await supabase.from("profiles").select("full_name,stream,role,email").eq("id",user.id).maybeSingle();if(error)console.warn("profile",error.message);if(data){profile=data;role=data.role||"student"}updateAccount(user,role,profile);if(role==="admin")await loadStudents();await loadLessonProgress();renderResources(resources);handleAdminRoute()}
+function handleAdminRoute(){
+ const params=new URLSearchParams(location.search);
+ if(params.get("panel")!=="admin")return;
+ if(!currentUser){openAuth("login");return}
+ if(currentRole!=="admin"){
+  toast("هذا الرابط مخصص لحساب المسؤول المعتمد فقط.");
+  params.delete("panel");
+  const query=params.toString();
+  history.replaceState(null,"",location.pathname+(query?"?"+query:"")+location.hash);
+  return;
+ }
+ $("adminPanel").scrollIntoView({behavior:"smooth",block:"start"});
+}
 async function loadResources(){
  if(!supabase){resources=[];studyQuestions=[];await loadLessonProgress();renderResources([]);return}
  const {data,error}=await supabase.from("study_resources").select("id,title,subject,level,stream,kind,description,file_url,video_url,questions,created_at").order("created_at",{ascending:false}).limit(100);
@@ -641,7 +654,7 @@ async function loadStudents(){
  if(!data?.length){$("studentGrid").innerHTML='<p class="helpText">لا توجد حسابات طلاب مسجلة حتى الآن.</p>';return}
  $("studentGrid").innerHTML='<div class="adminTableWrap"><table class="adminTable"><thead><tr><th>الاسم</th><th>البريد الإلكتروني</th><th>الشعبة</th><th>تاريخ التسجيل</th><th>الإجراء</th></tr></thead><tbody>'+data.map(s=>'<tr data-student-row="'+escapeHtml(s.id)+'"><td><input class="field student-name" maxlength="80" value="'+escapeHtml(s.full_name||"")+'"></td><td><span class="studentEmail">'+escapeHtml(s.email||"غير متوفر")+'</span></td><td><input class="field student-stream" maxlength="80" value="'+escapeHtml(s.stream||"")+'"></td><td>'+escapeHtml(s.created_at?new Date(s.created_at).toLocaleDateString("ar-DZ"):"—")+'</td><td><button class="btn small" type="button" data-save-student>حفظ</button></td></tr>').join("")+'</tbody></table></div>';
 }
-async function refreshSession(){if(!supabase){$("configNotice").classList.remove("hide");return}const {data:{session}}=await supabase.auth.getSession();if(session?.user)await loadProfile(session.user);else updateAccount(null);await loadResources();supabase.auth.onAuthStateChange((_event,session)=>{setTimeout(async()=>{if(session?.user)await loadProfile(session.user);else{updateAccount(null);await loadLessonProgress();renderResources(resources)}},0)})}
+async function refreshSession(){if(!supabase){$("configNotice").classList.remove("hide");return}const {data:{session}}=await supabase.auth.getSession();if(session?.user)await loadProfile(session.user);else updateAccount(null);await loadResources();handleAdminRoute();supabase.auth.onAuthStateChange((_event,session)=>{setTimeout(async()=>{if(session?.user)await loadProfile(session.user);else{updateAccount(null);await loadLessonProgress();renderResources(resources);handleAdminRoute()}},0)})}
 $("themeBtn").addEventListener("click",()=>{document.documentElement.classList.toggle("light");localStorage.setItem("rr-theme",document.documentElement.classList.contains("light")?"light":"dark");$("themeBtn").textContent=document.documentElement.classList.contains("light")?"☾":"☀"});
 if(localStorage.getItem("rr-theme")==="light"){document.documentElement.classList.add("light");$("themeBtn").textContent="☾"}
 $("menuBtn").addEventListener("click",()=>$("navlinks").classList.toggle("open"));document.querySelectorAll("#navlinks a").forEach(a=>a.addEventListener("click",()=>$("navlinks").classList.remove("open")));
