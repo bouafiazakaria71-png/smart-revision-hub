@@ -98,6 +98,28 @@ body{background:radial-gradient(ellipse at 78% -8%,#24517b55,transparent 42%),ra
 @media(max-width:560px){.adminWelcome{padding:14px;margin-top:12px}.adminWelcome strong{font-size:15px}.adminWelcome span{font-size:11px}.heroBtns .btn{flex:1;min-width:0}}
 @media(prefers-reduced-motion:reduce){.learningArt,.learningArt *, .adminWelcome.show{animation:none!important}}
 
+
+/* مساعد راجع بذكاء */
+.aiChat{gap:15px;padding:22px}
+.assistantToolbar{display:grid;grid-template-columns:minmax(220px,1fr) auto;gap:14px;align-items:end}
+.assistantLessonLabel{display:grid;gap:7px;color:var(--muted);font-size:13px;font-weight:700}
+.assistantQuickActions{display:flex;gap:8px;flex-wrap:wrap}
+.assistantQuickActions .btn{white-space:nowrap}
+.assistantHint{padding:11px 14px;border:1px solid #66e0c233;border-radius:13px;background:#66e0c20b;color:var(--muted);font-size:13px}
+.chatlog{height:420px;max-height:58vh;min-height:260px;padding:18px;background:color-mix(in srgb,var(--bg) 88%,#172641);scroll-behavior:smooth}
+.bubble{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.9;padding:12px 15px;max-width:min(92%,820px)}
+.bubble.bot{border:1px solid var(--line);background:var(--panel2)}
+.bubble.user{background:#46d6b220;border:1px solid #46d6b233}
+.bubble.waiting{color:var(--muted);animation:thinkingPulse 1.3s ease-in-out infinite}
+@keyframes thinkingPulse{0%,100%{opacity:.55}50%{opacity:1}}
+.chatrow{align-items:stretch}
+.chatrow .field{flex:1;min-width:0}
+.chatrow .btn{min-width:112px}
+.assistantFootnote{color:var(--muted);font-size:11px}
+@media(max-width:760px){.assistantToolbar{grid-template-columns:1fr}.assistantQuickActions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.assistantQuickActions .btn{white-space:normal;padding:8px 6px;font-size:12px}.aiChat{padding:14px}.chatlog{height:350px}.bubble{max-width:96%}}
+@media(max-width:460px){.assistantQuickActions{grid-template-columns:1fr 1fr}.chatrow{flex-direction:column}.chatrow .btn{width:100%}.chatlog{min-height:230px}}
+@media(prefers-reduced-motion:reduce){.bubble.waiting{animation:none}}
+
 </style>
 </head>
 <body>
@@ -174,7 +196,27 @@ body{background:radial-gradient(ellipse at 78% -8%,#24517b55,transparent 42%),ra
     <p class="notice">هذه اللوحة لا تعرض كلمات المرور ولا تحذف حسابات تسجيل الدخول أو توقفها. تلك العمليات تتطلب إجراءً خادمياً آمناً بصلاحيات خاصة.</p>
   </div>
 </section>
-<section class="wrap section" id="assistant"><div class="sectionHead"><div><h2>مساعد المراجعة</h2><p>اسأل عن طريقة تنظيم دراستك أو خطوات التحضير.</p></div></div><div class="card chatbox"><div class="chatlog" id="chatlog" aria-live="polite"><div class="bubble bot">مرحبًا! يمكنني مساعدتك بإرشادات عامة لتنظيم المراجعة. للحصول على إجابات دراسية ذكية من المنهاج، يلزم ربط خدمة ذكاء اصطناعي آمنة من جهة الخادم.</div></div><form class="chatrow" id="chatForm"><input class="field" id="chatInput" maxlength="500" placeholder="اكتب سؤالك هنا..." required><button class="btn primary" type="submit">إرسال</button></form></div></section>
+<section class="wrap section" id="assistant">
+  <div class="sectionHead"><div><h2>مساعد راجع بذكاء ✦</h2><p>اختر درساً ليقرأ ملفه، أو اطرح سؤالاً دراسياً عاماً. يستطيع تلخيص الدرس وإنشاء اختبار وشرح الأفكار الصعبة.</p></div></div>
+  <div class="card chatbox aiChat">
+    <div class="assistantToolbar">
+      <label class="assistantLessonLabel">الدرس الذي تريد المساعدة فيه
+        <select class="field" id="assistantLesson"><option value="">أسئلة عامة — دون اختيار درس</option></select>
+      </label>
+      <div class="assistantQuickActions">
+        <button class="btn small primary" id="summarizeLessonBtn" type="button">✦ لخّص الدرس</button>
+        <button class="btn small" id="quizLessonBtn" type="button">اختبر فهمي</button>
+        <button class="btn small" id="explainLessonBtn" type="button">اشرح الدرس</button>
+      </div>
+    </div>
+    <div class="assistantHint" id="assistantHint">اختر درساً من القائمة ثم اطلب تلخيصه أو اطرح سؤالاً عنه. عند وجود ملف PDF سيقرأ المساعد محتواه مباشرة.</div>
+    <div class="chatlog" id="chatlog" aria-live="polite" aria-relevant="additions text">
+      <div class="bubble bot">مرحباً! أنا مساعدك الدراسي في راجع بذكاء. أستطيع شرح الدروس، تبسيط المفاهيم، إعداد ملخصات واختبارات، والإجابة عن أسئلتك. ابدأ باختيار درس أو اكتب سؤالك.</div>
+    </div>
+    <form class="chatrow" id="chatForm"><input class="field" id="chatInput" maxlength="1800" placeholder="اكتب سؤالك عن الدرس أو أي موضوع دراسي..." required><button class="btn primary" id="chatSendBtn" type="submit">إرسال ←</button></form>
+    <div class="assistantFootnote">المساعد قد يخطئ أحياناً؛ راجع التواريخ والقوانين والمعلومات المهمة مع الدرس أو الأستاذ.</div>
+  </div>
+</section>
 <section class="wrap section" id="account"><div class="card profile"><div class="avatar" id="avatar">ز</div><div style="flex:1"><strong id="accountTitle">مساحة التلميذ</strong><div id="accountSub" style="color:var(--muted);font-size:13px">سجّل الدخول لمزامنة حسابك وبياناتك.</div></div><button class="btn small" id="accountAction">تسجيل الدخول</button></div></section>
 </main>
 <footer class="footer"><div class="wrap footerInner"><span>© <span id="year"></span> راجع بذكاء — صُممت لدعم التلميذ الجزائري.</span><span>التعلّم رحلة، وكل خطوة تصنع فرقًا.</span></div></footer>
@@ -208,7 +250,7 @@ function setAuthMode(mode){authMode=mode;document.querySelectorAll("[data-auth-t
 function openAuth(mode="login"){setAuthMode(mode);modal("authModal")}
 function updateAccount(user,role="student",profile=null){currentUser=user;currentRole=role;$("loginOpen").classList.toggle("hide",!!user);$("signupOpen").classList.toggle("hide",!!user);$("logoutBtn").classList.toggle("hide",!user);$("accountAction").textContent=user?"تحديث الملف الشخصي":"تسجيل الدخول";const displayName=(profile?.full_name||user?.user_metadata?.full_name||"").trim();$("accountTitle").textContent=user?(displayName||user.email):"مساحة التلميذ";$("accountSub").textContent=user?(user.email+" • "+(role==="admin"?"مسؤول المنصة":"حساب تلميذ")):"سجّل الدخول لمزامنة حسابك وبياناتك.";$("avatar").textContent=user?(displayName||user.email||"م").trim().charAt(0).toUpperCase():"ز";$("addResourceBtn").classList.toggle("hide",role!=="admin");$("adminPanel").classList.toggle("hide",role!=="admin"||!user);const welcome=$("adminWelcome");if(welcome){welcome.classList.toggle("show",!!user&&role==="admin");$("adminWelcomeTitle").textContent="مرحباً بك في حساب المسؤول زكريا"}}
 async function loadProfile(user){let profile=null,role="student";const {data,error}=await supabase.from("profiles").select("full_name,stream,role,email").eq("id",user.id).maybeSingle();if(error)console.warn("profile",error.message);if(data){profile=data;role=data.role||"student"}updateAccount(user,role,profile);if(role==="admin")await loadStudents()}
-async function loadResources(){if(!supabase){renderResources([]);return}const {data,error}=await supabase.from("study_resources").select("id,title,subject,level,stream,kind,description,file_url,video_url,questions,created_at").order("created_at",{ascending:false}).limit(100);if(error){console.error(error);toast("تعذر تحميل المكتبة. تحقق من تحديث قاعدة البيانات وسياسات الوصول.");renderResources([]);return}resources=data||[];renderResources(resources)}
+async function loadResources(){if(!supabase){renderResources([]);return}const {data,error}=await supabase.from("study_resources").select("id,title,subject,level,stream,kind,description,file_url,video_url,questions,created_at").order("created_at",{ascending:false}).limit(100);if(error){console.error(error);toast("تعذر تحميل المكتبة. تحقق من تحديث قاعدة البيانات وسياسات الوصول.");resources=[];renderResources([]);renderAssistantLessons();return}resources=data||[];renderResources(resources);renderAssistantLessons()}
 function renderResources(items){
  const q=$("searchInput").value.trim().toLowerCase(),type=$("typeFilter").value;
  const filtered=items.filter(r=>(!type||r.kind===type)&&(!selectedLevel||r.level===selectedLevel)&&(!selectedStream||!r.stream||r.stream===selectedStream)&&(!q||[r.title,r.subject,r.description,r.level,r.stream].join(" ").toLowerCase().includes(q)));
@@ -222,9 +264,63 @@ function renderResources(items){
    return '<div class="quizItem"><strong>'+(i+1)+'. '+escapeHtml(item.question||"")+'</strong><div class="quizOptions">'+opts.map((op,j)=>'<label><input type="radio" name="quiz-'+escapeHtml(r.id)+'-'+i+'" value="'+j+'"> '+escapeHtml(op)+'</label>').join("")+'</div><div class="quizFeedback" id="quiz-feedback-'+escapeHtml(r.id)+'-'+i+'"></div></div>';
   }).join("")+'<button class="btn small primary" type="button" data-check-quiz="'+escapeHtml(r.id)+'">تصحيح الإجابات</button></details>':'';
   const adminButtons=currentRole==="admin"?'<div class="resourceActions"><button class="btn small" type="button" data-edit-resource="'+escapeHtml(r.id)+'">تعديل</button><button class="btn small" type="button" data-delete-resource="'+escapeHtml(r.id)+'">حذف</button></div>':'';
+  const aiButtons='<div class="resourceActions"><button class="btn small" type="button" data-ai-select="'+escapeHtml(r.id)+'">اسأل عن الدرس</button><button class="btn small primary" type="button" data-ai-summarize="'+escapeHtml(r.id)+'">تلخيص الدرس ✦</button><button class="btn small" type="button" data-ai-quiz="'+escapeHtml(r.id)+'">اختبار الدرس</button></div>';
   const links=(pdf?'<a class="btn small" href="'+escapeHtml(pdf)+'" target="_blank" rel="noopener noreferrer">فتح PDF ↗</a>':'')+(video?'<a class="btn small" href="'+escapeHtml(video)+'" target="_blank" rel="noopener noreferrer">مشاهدة الشرح ▶</a>':'');
-  return '<article class="card resource"><div class="resourceTop"><span class="tag">'+escapeHtml(r.kind||"مورد")+'</span><span style="color:var(--muted);font-size:11px">'+escapeHtml(r.level||"")+(r.stream?' • '+escapeHtml(r.stream):'')+'</span></div><h3>'+escapeHtml(r.title)+'</h3><p>'+escapeHtml(r.subject||"")+' • '+escapeHtml(r.description||"لا يوجد وصف إضافي.")+'</p>'+(links?'<div class="resourceLinks">'+links+'</div>':'<span class="tag">محتوى نصي</span>')+quiz+adminButtons+'</article>';
+  return '<article class="card resource"><div class="resourceTop"><span class="tag">'+escapeHtml(r.kind||"مورد")+'</span><span style="color:var(--muted);font-size:11px">'+escapeHtml(r.level||"")+(r.stream?' • '+escapeHtml(r.stream):'')+'</span></div><h3>'+escapeHtml(r.title)+'</h3><p>'+escapeHtml(r.subject||"")+' • '+escapeHtml(r.description||"لا يوجد وصف إضافي.")+'</p>'+(links?'<div class="resourceLinks">'+links+'</div>':'<span class="tag">محتوى نصي</span>')+quiz+aiButtons+adminButtons+'</article>';
  }).join("");
+}
+function renderAssistantLessons(){
+ const select=$("assistantLesson");if(!select)return;
+ const previous=select.value;
+ select.innerHTML='<option value="">أسئلة عامة — دون اختيار درس</option>'+resources.map(r=>'<option value="'+escapeHtml(r.id)+'">'+escapeHtml([r.title,r.subject,r.level].filter(Boolean).join(" • "))+'</option>').join("");
+ if(resources.some(r=>r.id===previous))select.value=previous;
+}
+let assistantHistory=[];
+let assistantBusy=false;
+function addAssistantBubble(role,content,extraClass=""){
+ const el=document.createElement("div");el.className="bubble "+role+(extraClass?" "+extraClass:"");el.textContent=content;
+ $("chatlog").appendChild(el);$("chatlog").scrollTop=$("chatlog").scrollHeight;return el;
+}
+async function askStudyAssistant(mode="ask",messageOverride=null){
+ if(assistantBusy)return;
+ if(!supabase||!currentUser){toast("سجّل الدخول بحسابك أولاً لاستخدام المساعد الذكي.");openAuth("login");return}
+ const selectedId=$("assistantLesson").value;
+ const selected=resources.find(r=>r.id===selectedId);
+ if((mode==="summarize"||mode==="quiz"||mode==="explain")&&!selected){toast("اختر درساً من القائمة أولاً.");$("assistantLesson").focus();return}
+ const input=$("chatInput");
+ const question=messageOverride!==null?messageOverride:input.value.trim();
+ if(mode==="ask"&&!question){toast("اكتب سؤالك أولاً.");input.focus();return}
+ let display=question;
+ if(mode==="summarize")display="لخّص لي درس: "+selected.title;
+ else if(mode==="quiz")display="أنشئ اختباراً حول درس: "+selected.title;
+ else if(mode==="explain")display="اشرح لي درس: "+selected.title+" بطريقة مبسطة خطوة بخطوة.";
+ const userBubble=addAssistantBubble("user",display);
+ const waiting=addAssistantBubble("bot","يفكر المساعد ويقرأ محتوى الدرس...","waiting");
+ assistantBusy=true;$("chatSendBtn").disabled=true;$("summarizeLessonBtn").disabled=true;$("quizLessonBtn").disabled=true;$("explainLessonBtn").disabled=true;
+ if(messageOverride===null)input.value="";
+ try{
+   const {data,error}=await supabase.functions.invoke("study-assistant",{body:{
+     message:mode==="ask"?question:"",
+     mode:mode==="explain"?"ask":mode,
+     resourceId:selectedId||null,
+     history:assistantHistory.slice(-8)
+   }});
+   waiting.remove();
+   if(error)throw error;
+   if(!data||typeof data.answer!=="string")throw new Error(data?.error||"لم تصل إجابة من المساعد.");
+   const answer=data.answer.trim();
+   addAssistantBubble("bot",answer);
+   assistantHistory.push({role:"user",content:display},{role:"assistant",content:answer});
+   assistantHistory=assistantHistory.slice(-8);
+   $("assistantHint").textContent=selected?"المحادثة مرتبطة بدرس: "+selected.title+". يمكنك متابعة طرح الأسئلة حوله.":"يمكنك متابعة طرح الأسئلة العامة أو اختيار درس لربط المحادثة بمحتواه.";
+ }catch(error){
+   waiting.remove();
+   const details=error?.context?.json?.error||error?.message||"حدث خطأ غير معروف.";
+   addAssistantBubble("bot","تعذر الحصول على إجابة. "+details);
+ }finally{
+   assistantBusy=false;$("chatSendBtn").disabled=false;$("summarizeLessonBtn").disabled=false;$("quizLessonBtn").disabled=false;$("explainLessonBtn").disabled=false;
+   input.focus();
+ }
 }
 function addQuizEditorRow(question={}){
  const row=document.createElement("div");row.className="quizEditorRow";
@@ -265,6 +361,8 @@ $("addResourceBtn").addEventListener("click",()=>openResourceEditor());
 $("addQuizQuestionBtn").addEventListener("click",()=>addQuizEditorRow());
 $("quizEditor").addEventListener("click",e=>{const btn=e.target.closest("[data-remove-quiz-row]");if(btn){btn.closest(".quizEditorRow").remove();}});
 $("resourceGrid").addEventListener("click",async e=>{
+ const aiSelect=e.target.closest("[data-ai-select]"),aiSummarize=e.target.closest("[data-ai-summarize]"),aiQuiz=e.target.closest("[data-ai-quiz]");
+ if(aiSelect||aiSummarize||aiQuiz){const id=(aiSelect||aiSummarize||aiQuiz).dataset.aiSelect||(aiSummarize&&aiSummarize.dataset.aiSummarize)||(aiQuiz&&aiQuiz.dataset.aiQuiz);$("assistantLesson").value=id;const r=resources.find(x=>x.id===id);$("assistant").scrollIntoView({behavior:"smooth"});if(aiSummarize)askStudyAssistant("summarize");else if(aiQuiz)askStudyAssistant("quiz");else{$("assistantHint").textContent="اسأل الآن عن درس: "+(r?.title||"");$("chatInput").focus()}return}
  const edit=e.target.closest("[data-edit-resource]"),del=e.target.closest("[data-delete-resource]"),check=e.target.closest("[data-check-quiz]");
  if(edit){const r=resources.find(x=>x.id===edit.dataset.editResource);if(r)openResourceEditor(r);return}
  if(del){if(currentRole!=="admin"||!confirm("هل أنت متأكد من حذف هذا المورد؟"))return;const {error}=await supabase.from("study_resources").delete().eq("id",del.dataset.deleteResource);if(error)return toast("تعذر الحذف: "+error.message);toast("تم حذف المورد.");await loadResources();return}
@@ -313,7 +411,11 @@ $("resourceForm").addEventListener("submit",async e=>{
  if(result.error)return toast("تعذر حفظ المورد: "+result.error.message);
  $("resourceForm").reset();$("quizEditor").innerHTML="";modal("resourceModal",false);toast(editingId?"تم تحديث المورد بنجاح.":"تمت إضافة المورد بنجاح.");await loadResources();
 });
-$("chatForm").addEventListener("submit",e=>{e.preventDefault();const input=$("chatInput"),q=input.value.trim();if(!q)return;const log=$("chatlog");const user=document.createElement("div");user.className="bubble user";user.textContent=q;log.append(user);const answer=document.createElement("div");answer.className="bubble bot";answer.textContent="شكرًا على سؤالك. هذه النسخة تقدم إرشادات أولية فقط ولا تتصل بعد بنموذج ذكاء اصطناعي. للحصول على إجابة تعليمية دقيقة، أضف واجهة خلفية آمنة لخدمة الذكاء الاصطناعي ولا تضع مفتاح API في المتصفح.";log.append(answer);input.value="";log.scrollTop=log.scrollHeight});
+$("chatForm").addEventListener("submit",e=>{e.preventDefault();askStudyAssistant("ask")});
+$("summarizeLessonBtn").addEventListener("click",()=>askStudyAssistant("summarize"));
+$("quizLessonBtn").addEventListener("click",()=>askStudyAssistant("quiz"));
+$("explainLessonBtn").addEventListener("click",()=>askStudyAssistant("explain"));
+$("assistantLesson").addEventListener("change",()=>{const r=resources.find(x=>x.id===$("assistantLesson").value);$("assistantHint").textContent=r?"تم اختيار: "+r.title+". ستعتمد إجابات المساعد على ملف الدرس عند توفر PDF.":"الأسئلة العامة لا ترتبط بدرس محدد."});
 $("year").textContent=new Date().getFullYear();if(!configured){$("configNotice").textContent="وضع المعاينة: الواجهة تعمل، لكن الحسابات والمكتبة السحابية تحتاج إعداد Supabase. اتبع التعليمات في README.md."}refreshSession();
 </script>
 </body></html>
