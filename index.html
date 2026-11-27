@@ -257,8 +257,8 @@ body.admin-portal .adminWelcome {width:min(1160px,calc(100% - 36px))}
 @media(max-width:760px){.studentAnalyticsStats{grid-template-columns:repeat(2,minmax(0,1fr))}.studentDetailStats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:420px){.studentAnalyticsStats{gap:7px}.studentMetric{padding:11px}.studentMetric strong{font-size:21px}}
 
-/* بوابة أمان المسؤول والتحقق بخطوتين */
-.adminSecurityGate{padding-top:20px;max-width:820px}.adminSecurityCard{display:grid;gap:14px;padding:clamp(20px,4vw,34px);border-color:#66e0c255;background:linear-gradient(145deg,color-mix(in srgb,var(--panel) 92%,#154a48),var(--panel2));box-shadow:0 20px 60px #0004}.adminSecurityIcon{width:58px;height:58px;border-radius:18px;display:grid;place-items:center;font-size:28px;background:#66e0c21c}.adminSecurityCard h2{margin:8px 0;font-size:26px}.adminSecurityCard p{margin:4px 0;color:var(--muted)}.adminMfaArea{display:grid;gap:12px;border-top:1px solid var(--line);padding-top:16px}.adminMfaQr{width:190px;height:190px;max-width:100%;object-fit:contain;background:#fff;padding:10px;border-radius:14px;border:1px solid var(--line)}.adminMfaSecret{display:block;direction:ltr;text-align:left;overflow-wrap:anywhere;background:var(--bg);border:1px solid var(--line);padding:12px;border-radius:10px;color:var(--brand)}.adminMfaCodeLabel{font-size:13px;color:var(--muted);font-weight:700}.adminMfaCode{max-width:230px;text-align:center;direction:ltr;letter-spacing:.25em;font-family:monospace;font-size:21px}.adminSecurityCard .helpText{line-height:1.8}
+/* حماية المسؤول عبر Cloudflare Turnstile */
+.adminSecurityGate{padding-top:20px;max-width:820px}.adminSecurityCard{display:grid;gap:14px;padding:clamp(20px,4vw,34px);border-color:#66e0c255;background:linear-gradient(145deg,color-mix(in srgb,var(--panel) 92%,#154a48),var(--panel2));box-shadow:0 20px 60px #0004}.adminSecurityIcon{width:58px;height:58px;border-radius:18px;display:grid;place-items:center;font-size:28px;background:#66e0c21c}.adminSecurityCard h2{margin:8px 0;font-size:26px}.adminSecurityCard p{margin:4px 0;color:var(--muted)}.adminCaptchaArea{display:grid;gap:12px;border-top:1px solid var(--line);padding-top:16px}.adminCaptchaWidget{min-height:66px;max-width:100%;display:flex;align-items:center}.adminCaptchaActions{display:flex;gap:9px;flex-wrap:wrap}.adminSecurityCard .helpText{line-height:1.8}
 </style>
 </head>
 <body>
@@ -286,32 +286,21 @@ body.admin-portal .adminWelcome {width:min(1160px,calc(100% - 36px))}
 </section>
 <section class="wrap section adminSecurityGate hide" id="adminSecurityGate" aria-labelledby="adminSecurityTitle">
   <div class="card adminSecurityCard">
-    <div class="adminSecurityIcon" aria-hidden="true">🔐</div>
+    <div class="adminSecurityIcon" aria-hidden="true">✓</div>
     <div>
-      <span class="tag">طبقة حماية إضافية</span>
-      <h2 id="adminSecurityTitle">تأمين حساب المسؤول</h2>
-      <p id="adminSecurityMessage">للوصول إلى أدوات الإدارة وبيانات الطلاب، يلزم تأكيد هويتك بتطبيق مصادقة ذي رمز متغيّر.</p>
+      <span class="tag">تحقق بشري</span>
+      <h2 id="adminSecurityTitle">تأكيد أنك لست روبوتًا</h2>
+      <p id="adminSecurityMessage">أكمل اختبار التحقق لفتح لوحة المسؤول.</p>
     </div>
-    <div id="adminMfaStartArea" class="adminMfaArea hide">
-      <p class="helpText">هذه الخطوة مطلوبة مرة واحدة للحساب الإداري. استخدم تطبيق مصادقة موثوقاً على جهازك، واحتفظ بمفتاح الاسترداد في مكان خاص وآمن.</p>
-      <button class="btn primary" type="button" id="adminMfaStartBtn">إعداد المصادقة الثنائية</button>
+    <div class="adminCaptchaArea">
+      <div id="adminCaptchaWidget" class="adminCaptchaWidget" aria-label="اختبار التحقق البشري"></div>
+      <p class="helpText" id="adminCaptchaStatus" aria-live="polite">جارٍ تجهيز اختبار التحقق...</p>
+      <div class="adminCaptchaActions">
+        <button class="btn primary" type="button" id="adminCaptchaVerifyBtn" disabled>تحقق وافتح لوحة المسؤول</button>
+        <button class="btn ghost" type="button" id="adminCaptchaRetryBtn">إعادة المحاولة</button>
+      </div>
     </div>
-    <div id="adminMfaEnrollArea" class="adminMfaArea hide">
-      <p>امسح رمز QR باستخدام تطبيق المصادقة، ثم أدخل الرمز المؤقت المكوّن من 6 أرقام لإكمال التفعيل.</p>
-      <img id="adminMfaQr" class="adminMfaQr" alt="رمز QR لإعداد المصادقة الثنائية">
-      <p class="helpText">المفتاح اليدوي عند تعذر مسح الرمز:</p>
-      <code id="adminMfaSecret" class="adminMfaSecret"></code>
-      <label class="adminMfaCodeLabel" for="adminMfaSetupCode">رمز التحقق</label>
-      <input class="field adminMfaCode" id="adminMfaSetupCode" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="000000">
-      <button class="btn primary" type="button" id="adminMfaSetupVerify">تأكيد التفعيل</button>
-    </div>
-    <div id="adminMfaChallengeArea" class="adminMfaArea hide">
-      <p>أدخل الرمز الحالي من تطبيق المصادقة للمتابعة إلى لوحة الإدارة.</p>
-      <label class="adminMfaCodeLabel" for="adminMfaChallengeCode">رمز التحقق المكوّن من 6 أرقام</label>
-      <input class="field adminMfaCode" id="adminMfaChallengeCode" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="000000">
-      <button class="btn primary" type="button" id="adminMfaChallengeVerify">تحقق وافتح لوحة المسؤول</button>
-    </div>
-    <p class="helpText">لن تُعرض كلمات المرور أو رموز المصادقة داخل لوحة متابعة الطلاب.</p>
+    <p class="helpText">تُستخدم هذه الخطوة لمنع الدخول الآلي. تبقى كلمة مرور حساب المسؤول مطلوبة، ولا تُعرض كلمات المرور في لوحة متابعة الطلاب.</p>
   </div>
 </section>
 <section class="wrap section adminPanel hide" id="adminPanel">
@@ -396,7 +385,7 @@ body.admin-portal .adminWelcome {width:min(1160px,calc(100% - 36px))}
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/+esm";
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "/config.js?v=20261127-portal";
+import { SUPABASE_URL, SUPABASE_ANON_KEY, TURNSTILE_SITE_KEY } from "/config.js?v=20261127-turnstile";
 const configured = /^https:\/\//.test(SUPABASE_URL) && !SUPABASE_URL.includes("YOUR_PROJECT") && SUPABASE_ANON_KEY.length > 20 && !SUPABASE_ANON_KEY.includes("YOUR_ANON");
 const supabase = configured ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}) : null;
 const $ = id => document.getElementById(id);
@@ -407,8 +396,9 @@ function isAdminPortal(){
  return /^\/admin\/?$/.test(location.pathname) ||
   (location.pathname==="/" && new URLSearchParams(location.search).get("panel")==="admin");
 }
-let adminMfaVerified=false, adminMfaFactorId=null;
-function hasAdminAccess(){return isAdminPortal() && !!currentUser && currentRole==="admin" && adminMfaVerified}
+let adminCaptchaVerified=false, adminCaptchaUserId=null, adminCaptchaExpiresAt=0, adminCaptchaTimer=null, adminCaptchaWidgetId=null, adminCaptchaToken="", turnstileApiPromise=null, currentProfile=null;
+const ADMIN_CAPTCHA_TTL_MS=20*60*1000;
+function hasAdminAccess(){return isAdminPortal() && !!currentUser && currentRole==="admin" && adminCaptchaVerified && adminCaptchaUserId===currentUser.id && Date.now()<adminCaptchaExpiresAt}
 function applyPortalMode(){
  const adminPortal=isAdminPortal();
  document.body.classList.toggle("admin-portal",adminPortal);
@@ -445,7 +435,7 @@ function stopAdminAnalyticsRealtime(){
 function updateAccount(user,role="student",profile=null){
  const nextUserId=user?.id||null;
  if(!user||role!=="admin"||(currentUser&&currentUser.id!==nextUserId)){
-  adminMfaVerified=false;adminMfaFactorId=null;
+  resetAdminCaptchaState();
  }
  if(nextUserId!==assistantHistoryUserId){
   assistantHistoryUserId=nextUserId;
@@ -460,7 +450,7 @@ function updateAccount(user,role="student",profile=null){
  $("accountAction").textContent=user?"تحديث الملف الشخصي":"تسجيل الدخول";
  const displayName=(profile?.full_name||user?.user_metadata?.full_name||"").trim();
  $("accountTitle").textContent=user?(displayName||user.email):"مساحة التلميذ";
- $("accountSub").textContent=user?(user.email+" • "+(isAdminPortal()?(adminAccess?"مسؤول موثّق بخطوتين":"بوابة المسؤول — التحقق مطلوب"):"تم تسجيل الدخول")):"سجّل الدخول لمزامنة حسابك وبياناتك.";
+ $("accountSub").textContent=user?(user.email+" • "+(isAdminPortal()?(adminAccess?"مسؤول — تم التحقق":"بانتظار اختبار CAPTCHA"):"تم تسجيل الدخول")):"سجّل الدخول لمزامنة حسابك وبياناتك.";
  $("avatar").textContent=user?(displayName||user.email||"م").trim().charAt(0).toUpperCase():"ز";
  $("adminNavLink").classList.add("hide");
  $("adminPanel").classList.toggle("hide",!adminAccess);
@@ -468,88 +458,129 @@ function updateAccount(user,role="student",profile=null){
  const welcome=$("adminWelcome");
  if(welcome){welcome.classList.toggle("show",adminAccess);$("adminWelcomeTitle").textContent="مرحباً بك في بوابة المسؤول"}
 }
-function showAdminMfaArea(area,message){
- const ids=["adminMfaStartArea","adminMfaEnrollArea","adminMfaChallengeArea"];
- ids.forEach(id=>$(id).classList.toggle("hide",id!==area));
- $("adminSecurityGate").classList.remove("hide");
- $("adminSecurityMessage").textContent=message;
+function resetAdminCaptchaState(){
+  adminCaptchaVerified=false;adminCaptchaUserId=null;adminCaptchaExpiresAt=0;adminCaptchaToken="";
+  if(adminCaptchaTimer){clearTimeout(adminCaptchaTimer);adminCaptchaTimer=null}
+  const verifyButton=$("adminCaptchaVerifyBtn");if(verifyButton)verifyButton.disabled=true;
 }
-async function prepareAdminMfa(){
- adminMfaVerified=false;adminMfaFactorId=null;
- $("adminPanel").classList.add("hide");
- $("adminWelcome").classList.remove("show");
- $("adminSecurityGate").classList.remove("hide");
- $("adminSecurityMessage").textContent="جارٍ التحقق من مستوى حماية حساب المسؤول...";
- try{
-  const assurance=await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-  if(assurance.error)throw assurance.error;
-  if(assurance.data?.currentLevel==="aal2"){
-   adminMfaVerified=true;
-   $("adminSecurityGate").classList.add("hide");
-   return true;
+function loadTurnstileApi(){
+  if(window.turnstile?.render)return Promise.resolve(window.turnstile);
+  if(!turnstileApiPromise){
+    turnstileApiPromise=new Promise((resolve,reject)=>{
+      const script=document.createElement("script");
+      script.src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+      script.async=true;script.defer=true;
+      script.onload=()=>window.turnstile?.render?resolve(window.turnstile):reject(new Error("Turnstile did not initialize"));
+      script.onerror=()=>reject(new Error("Turnstile script could not load"));
+      document.head.appendChild(script);
+    }).catch(error=>{turnstileApiPromise=null;throw error});
   }
-  const factorResult=await supabase.auth.mfa.listFactors();
-  if(factorResult.error)throw factorResult.error;
-  const factors=factorResult.data?.totp||[];
-  const verified=factors.find(f=>f.status==="verified");
-  if(verified){
-   adminMfaFactorId=verified.id;
-   $("adminMfaChallengeCode").value="";
-   showAdminMfaArea("adminMfaChallengeArea","تأكيد إضافي مطلوب قبل فتح لوحة المسؤول.");
-   return false;
+  return turnstileApiPromise;
+}
+async function renderAdminCaptchaWidget(forceReset=false){
+  const status=$("adminCaptchaStatus"),verifyButton=$("adminCaptchaVerifyBtn");
+  if(!TURNSTILE_SITE_KEY||TURNSTILE_SITE_KEY.includes("REPLACE_WITH")){
+    status.textContent="إعداد CAPTCHA غير مكتمل: أضف Site Key في ملف config.js، وأضف Secret Key في إعدادات Cloudflare Pages.";
+    verifyButton.disabled=true;
+    return;
   }
-  const pending=factors.find(f=>f.status==="unverified");
-  if(pending){
-   const removed=await supabase.auth.mfa.unenroll({factorId:pending.id});
-   if(removed.error)throw removed.error;
+  try{
+    const api=await loadTurnstileApi();
+    if(adminCaptchaWidgetId!==null){
+      if(forceReset)api.reset(adminCaptchaWidgetId);
+      return;
+    }
+    status.textContent="أكمل اختبار التحقق الظاهر أدناه.";
+    adminCaptchaWidgetId=api.render($("adminCaptchaWidget"),{
+      sitekey:TURNSTILE_SITE_KEY,
+      action:"admin_access",
+      theme:"auto",
+      callback:token=>{
+        adminCaptchaToken=token;
+        status.textContent="اكتمل الاختبار. اضغط زر التحقق لفتح لوحة المسؤول.";
+        verifyButton.disabled=false;
+      },
+      "expired-callback":()=>{
+        adminCaptchaToken="";
+        verifyButton.disabled=true;
+        status.textContent="انتهت صلاحية الاختبار. أعد المحاولة.";
+      },
+      "error-callback":()=>{
+        adminCaptchaToken="";
+        verifyButton.disabled=true;
+        status.textContent="تعذر تحميل اختبار التحقق. افحص الاتصال ثم اضغط «إعادة المحاولة».";
+      }
+    });
+  }catch(error){
+    console.error("Turnstile widget",error);
+    status.textContent="تعذر تشغيل خدمة CAPTCHA. افحص اتصال الإنترنت وإعدادات Cloudflare ثم أعد المحاولة.";
+    verifyButton.disabled=true;
   }
-  showAdminMfaArea("adminMfaStartArea","لم تُفعّل المصادقة الثنائية لهذا الحساب بعد. أكمل الإعداد مرة واحدة لحماية لوحة المسؤول وبيانات الطلاب.");
+}
+async function prepareAdminCaptcha(){
+  if(adminCaptchaVerified&&adminCaptchaUserId===currentUser?.id&&Date.now()<adminCaptchaExpiresAt)return true;
+  resetAdminCaptchaState();
+  $("adminPanel").classList.add("hide");
+  $("adminWelcome").classList.remove("show");
+  $("adminSecurityGate").classList.remove("hide");
+  $("adminSecurityMessage").textContent="للوصول إلى أدوات الإدارة وبيانات الطلاب، أكمل اختبار التحقق البشري.";
+  await renderAdminCaptchaWidget();
   return false;
- }catch(error){
-  console.error("admin MFA status",error);
-  showAdminMfaArea("adminMfaStartArea","تعذر التحقق من إعداد المصادقة الثنائية. لا يمكن فتح لوحة المسؤول قبل نجاح فحص الحماية. أعد تحميل الصفحة أو سجّل الدخول مجدداً.");
-  return false;
- }
 }
-async function beginAdminMfaEnrollment(){
- if(!supabase||!currentUser||currentRole!=="admin"||!isAdminPortal())return toast("سجّل الدخول بحساب المسؤول أولاً.");
- const button=$("adminMfaStartBtn");button.disabled=true;
- try{
-  const result=await supabase.auth.mfa.enroll({factorType:"totp",friendlyName:"مسؤول منصة علي بن أبي طالب"});
-  if(result.error)throw result.error;
-  adminMfaFactorId=result.data.id;
-  $("adminMfaQr").src=result.data.totp.qr_code;
-  $("adminMfaSecret").textContent=result.data.totp.secret;
-  $("adminMfaSetupCode").value="";
-  showAdminMfaArea("adminMfaEnrollArea","تم إنشاء رمز الإعداد. امسحه في تطبيق المصادقة وأكّد الرمز قبل متابعة استخدام لوحة الإدارة.");
- }catch(error){
-  console.error("admin MFA enrollment",error);
-  toast("تعذر بدء إعداد المصادقة الثنائية: "+(error.message||"خطأ غير معروف"));
- }finally{button.disabled=false}
-}
-async function completeAdminMfa(code){
- if(!supabase||!adminMfaFactorId)return toast("ابدأ إعداد المصادقة الثنائية أو حدّث الصفحة.");
- if(!/^[0-9]{6}$/.test(String(code||"").trim()))return toast("أدخل رمزاً صحيحاً مكوّناً من 6 أرقام.");
- const button=$("adminMfaEnrollArea").classList.contains("hide")?$("adminMfaChallengeVerify"):$("adminMfaSetupVerify");
- button.disabled=true;
- try{
-  const challenge=await supabase.auth.mfa.challenge({factorId:adminMfaFactorId});
-  if(challenge.error)throw challenge.error;
-  const verified=await supabase.auth.mfa.verify({factorId:adminMfaFactorId,challengeId:challenge.data.id,code:String(code).trim()});
-  if(verified.error)throw verified.error;
-  const assurance=await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-  if(assurance.error)throw assurance.error;
-  if(assurance.data?.currentLevel!=="aal2"){
-   throw new Error("لم يصل مستوى الجلسة إلى المستوى المحمي aal2. تحقق من الرمز وأعد المحاولة.");
+async function verifyAdminCaptcha(){
+  if(!currentUser||currentRole!=="admin"||!isAdminPortal())return toast("سجّل الدخول بحساب المسؤول أولاً.");
+  const token=adminCaptchaToken;
+  if(!token)return toast("أكمل اختبار CAPTCHA أولاً.");
+  const button=$("adminCaptchaVerifyBtn");button.disabled=true;
+  try{
+    const response=await fetch("/api/admin-captcha",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({token})
+    });
+    const result=await response.json().catch(()=>({}));
+    if(!response.ok||!result.success)throw new Error(result.error==="captcha_not_configured"?"إعداد CAPTCHA غير مكتمل في Cloudflare.":"لم يقبل الخادم اختبار التحقق. أعد المحاولة.");
+    adminCaptchaVerified=true;
+    adminCaptchaUserId=currentUser.id;
+    adminCaptchaExpiresAt=Date.now()+ADMIN_CAPTCHA_TTL_MS;
+    adminCaptchaToken="";
+    $("adminSecurityGate").classList.add("hide");
+    if(adminCaptchaTimer)clearTimeout(adminCaptchaTimer);
+    adminCaptchaTimer=setTimeout(async()=>{
+      resetAdminCaptchaState();
+      $("adminPanel").classList.add("hide");
+      $("adminWelcome").classList.remove("show");
+      $("adminSecurityGate").classList.remove("hide");
+      $("adminSecurityMessage").textContent="انتهت مدة التحقق. أكمل الاختبار مرة أخرى للمتابعة.";
+      if(window.turnstile&&adminCaptchaWidgetId!==null)window.turnstile.reset(adminCaptchaWidgetId);
+      $("adminCaptchaStatus").textContent="أكمل اختبار التحقق الظاهر أدناه.";
+      await renderAdminCaptchaWidget();
+      handleAdminRoute();
+    },ADMIN_CAPTCHA_TTL_MS);
+    updateAccount(currentUser,currentRole,currentProfile);
+    handleAdminRoute();
+    await loadStudents();
+    await loadLessonProgress();
+    toast("تم التحقق بنجاح. لوحة المسؤول متاحة الآن.");
+  }catch(error){
+    console.error("admin CAPTCHA verification",error);
+    adminCaptchaToken="";
+    button.disabled=true;
+    if(window.turnstile&&adminCaptchaWidgetId!==null)window.turnstile.reset(adminCaptchaWidgetId);
+    toast(error.message||"تعذر التحقق. حاول مجدداً.");
   }
-  adminMfaVerified=true;
-  $("adminSecurityGate").classList.add("hide");
-  toast("تم تأكيد هويتك. فُتحت صلاحيات المسؤول المحمية.");
-  await loadProfile(currentUser);
- }catch(error){
-  console.error("admin MFA verification",error);
-  toast("لم يتم قبول رمز المصادقة: "+(error.message||"تحقق من الرمز الحالي وحاول مجدداً."));
- }finally{button.disabled=false}
+}
+async function retryAdminCaptcha(){
+  adminCaptchaToken="";
+  $("adminCaptchaVerifyBtn").disabled=true;
+  $("adminCaptchaStatus").textContent="جارٍ إعادة تجهيز اختبار التحقق...";
+  if(window.turnstile&&adminCaptchaWidgetId!==null){
+    window.turnstile.reset(adminCaptchaWidgetId);
+    return;
+  }
+  turnstileApiPromise=null;
+  adminCaptchaWidgetId=null;
+  await renderAdminCaptchaWidget();
 }
 function syncStudyPathUI(){
  document.querySelectorAll("[data-level]").forEach(b=>{
@@ -571,11 +602,11 @@ async function loadProfile(user){
  const {data,error}=await supabase.from("profiles").select("full_name,stream,level,role,email").eq("id",user.id).maybeSingle();
  if(error)console.warn("profile",error.message);
  if(data){profile=data;role=data.role||"student"}
- currentUser=user;currentRole=role;
+ currentUser=user;currentRole=role;currentProfile=profile;
  if(isAdminPortal()&&role==="admin"){
-  await prepareAdminMfa();
+  await prepareAdminCaptcha();
  }else{
-  adminMfaVerified=false;adminMfaFactorId=null;
+  resetAdminCaptchaState();
  }
  if(role==="student"){
   selectedLevel=profile?.level||"";selectedStream=profile?.stream||"";syncStudyPathUI();
@@ -606,7 +637,7 @@ function handleAdminRoute(){
   location.replace("/student/");
   return;
  }
- if(!adminMfaVerified){
+ if(!hasAdminAccess()){
   $("adminPanel").classList.add("hide");
   $("adminWelcome").classList.remove("show");
   $("adminSecurityGate").classList.remove("hide");
@@ -1087,7 +1118,7 @@ async function refreshSession(){if(!supabase){$("configNotice").classList.remove
 $("themeBtn").addEventListener("click",()=>{document.documentElement.classList.toggle("light");localStorage.setItem("rr-theme",document.documentElement.classList.contains("light")?"light":"dark");$("themeBtn").textContent=document.documentElement.classList.contains("light")?"☾":"☀"});
 if(localStorage.getItem("rr-theme")==="light"){document.documentElement.classList.add("light");$("themeBtn").textContent="☾"}
 $("menuBtn").addEventListener("click",()=>$("navlinks").classList.toggle("open"));document.querySelectorAll("#navlinks a").forEach(a=>a.addEventListener("click",()=>$("navlinks").classList.remove("open")));
-$("loginOpen").addEventListener("click",()=>openAuth("login"));$("signupOpen").addEventListener("click",()=>openAuth("signup"));$("heroStart").addEventListener("click",()=>$("levels").scrollIntoView({behavior:"smooth"}));$("accountAction").addEventListener("click",()=>openAuth("login"));$("logoutBtn").addEventListener("click",async()=>{if(!supabase)return toast("أكمل إعداد Supabase أولًا.");const {error}=await supabase.auth.signOut();if(error)toast("تعذر تسجيل الخروج: "+error.message);else{adminMfaVerified=false;adminMfaFactorId=null;toast("تم تسجيل الخروج.")}});
+$("loginOpen").addEventListener("click",()=>openAuth("login"));$("signupOpen").addEventListener("click",()=>openAuth("signup"));$("heroStart").addEventListener("click",()=>$("levels").scrollIntoView({behavior:"smooth"}));$("accountAction").addEventListener("click",()=>openAuth("login"));$("logoutBtn").addEventListener("click",async()=>{if(!supabase)return toast("أكمل إعداد Supabase أولًا.");const {error}=await supabase.auth.signOut();if(error)toast("تعذر تسجيل الخروج: "+error.message);else{resetAdminCaptchaState();toast("تم تسجيل الخروج.")}});
 document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>modal(b.dataset.close,false)));document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)modal(m.id,false)}));document.addEventListener("keydown",e=>{if(e.key==="Escape")document.querySelectorAll(".modal.show").forEach(m=>modal(m.id,false))});
 document.querySelectorAll("[data-auth-tab]").forEach(b=>b.addEventListener("click",()=>setAuthMode(b.dataset.authTab)));
 $("authForm").addEventListener("submit",async e=>{e.preventDefault();if(!supabase)return toast("المصادقة غير مفعّلة بعد. أكمل خطوات إعداد Supabase في README.md.");const email=$("email").value.trim(),password=$("password").value;if(authMode==="signup"){if(password.length<12)return toast("اجعل كلمة المرور 12 حرفاً على الأقل لحماية الحساب.");const full_name=$("fullName").value.trim(),level=$("level").value,stream=$("stream").value;if(!full_name||!level||!stream)return toast("أكمل الاسم والمستوى والشعبة.");const {data,error}=await supabase.auth.signUp({email,password,options:{data:{full_name,level,stream}}});if(error)return toast("تعذر إنشاء الحساب: "+error.message);modal("authModal",false);toast(data.session?"تم إنشاء الحساب وتسجيل الدخول.":"تحقق من بريدك الإلكتروني لتأكيد الحساب.");if(data.user&&data.session)await loadProfile(data.user)}else{const {data,error}=await supabase.auth.signInWithPassword({email,password});if(error)return toast("تعذر تسجيل الدخول. تحقق من البريد وكلمة المرور.");modal("authModal",false);toast("أهلًا بعودتك!");if(data.user)await loadProfile(data.user);await loadResources()}});
@@ -1109,7 +1140,7 @@ $("addLessonResourceBtn").addEventListener("click",()=>openResourceEditor(null,"
  $("questionResourceSelect").addEventListener("change",renderQuestionBankExisting);
  $("questionBankForm").addEventListener("submit",async e=>{
   e.preventDefault();
-  if(!hasAdminAccess()||!currentUser)return toast("يلزم فتح بوابة المسؤول بحساب مسؤول موثّق.");
+  if(!hasAdminAccess()||!currentUser)return toast("يلزم فتح بوابة المسؤول واجتياز اختبار CAPTCHA.");
   const resourceId=$("questionResourceSelect").value;
   if(!resourceId)return toast("اختر الدرس الذي تريد إضافة السؤال إليه.");
   const question=$("bankQuestionText").value.trim();
@@ -1143,10 +1174,8 @@ $("resourceGrid").addEventListener("click",async e=>{
  if(edit){const r=resources.find(x=>x.id===edit.dataset.editResource);if(r)openResourceEditor(r);return}
  if(del){if(!hasAdminAccess()||!confirm("هل أنت متأكد من حذف هذا المورد؟"))return;const {error}=await supabase.from("study_resources").delete().eq("id",del.dataset.deleteResource);if(error)return toast("تعذر الحذف: "+error.message);toast("تم حذف المورد.");await loadResources();return}
 });
-$("adminMfaStartBtn").addEventListener("click",beginAdminMfaEnrollment);
-$("adminMfaSetupVerify").addEventListener("click",()=>completeAdminMfa($("adminMfaSetupCode").value));
-$("adminMfaChallengeVerify").addEventListener("click",()=>completeAdminMfa($("adminMfaChallengeCode").value));
-["adminMfaSetupCode","adminMfaChallengeCode"].forEach(id=>$(id).addEventListener("keydown",e=>{if(e.key==="Enter")completeAdminMfa($(id).value)}));
+$("adminCaptchaVerifyBtn").addEventListener("click",verifyAdminCaptcha);
+$("adminCaptchaRetryBtn").addEventListener("click",retryAdminCaptcha);
 $("refreshStudentsBtn").addEventListener("click",loadStudents);
 $("studentGrid").addEventListener("click",async e=>{
  const details=e.target.closest("[data-view-student]");
@@ -1166,7 +1195,7 @@ $("studentDetailsPanel").addEventListener("click",e=>{
  if(e.target.closest("[data-close-student-details]"))$("studentDetailsPanel").classList.add("hide");
 });
 $("resourceForm").addEventListener("submit",async e=>{
- e.preventDefault();if(!supabase||!hasAdminAccess()||!currentUser)return toast("يلزم فتح بوابة المسؤول بحساب مسؤول موثّق.");
+ e.preventDefault();if(!supabase||!hasAdminAccess()||!currentUser)return toast("يلزم فتح بوابة المسؤول واجتياز اختبار CAPTCHA.");
  const file=$("resFile").files[0];if(file&&(file.size>20*1024*1024||(!/\.pdf$/i.test(file.name)&&file.type!=="application/pdf")))return toast("اختر ملف PDF صالحًا لا يتجاوز 20 ميغابايت.");
  let file_url=$("resUrl").value.trim();if(file_url&&!safeUrl(file_url))return toast("أدخل رابطًا صحيحًا يبدأ بـ https://");
  const video_url=$("resVideoUrl").value.trim();if(video_url&&!safeUrl(video_url))return toast("أدخل رابط فيديو صحيحًا يبدأ بـ https://");
