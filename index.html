@@ -251,8 +251,8 @@ body{background:radial-gradient(ellipse at 78% -8%,#1d527255,transparent 43%),ra
   <div class="grid adminUploadGrid" style="margin-bottom:18px">
     <article class="card feature adminUploadCard"><span class="emoji" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v17H6.5A2.5 2.5 0 0 1 4 17.5z"/><path d="M4 17.5A2.5 2.5 0 0 1 6.5 15H20M8 7h8M8 10h6"/></svg></span><h3>إضافة درس</h3><p>أضف عنوان الدرس والمادة والمستوى والشعبة، ثم ارفع ملف PDF. يمكنك إرفاق فيديو وأسئلة تدريبية.</p><button class="btn primary" id="addLessonResourceBtn" type="button">＋ إضافة درس جديد</button></article>
     <article class="card feature adminUploadCard"><span class="emoji" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M14 3v5h5M9 14h6M9 17h6"/></svg></span><h3>رفع حولية</h3><p>ارفع موضوع امتحان سابق بصيغة PDF، وحدد المادة والمستوى والشعبة ليجده الطلاب في المكتبة.</p><button class="btn primary" id="addPastPaperBtn" type="button">＋ رفع حولية جديدة</button></article>
-  </div>
     <article class="card feature adminUploadCard questionBankCard"><span class="emoji" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5h12M8 12h12M8 19h12"/><path d="m3 5 1 1 2-2M3 12l1 1 2-2M3 19l1 1 2-2"/></svg></span><h3>بنك الأسئلة التدريبية</h3><p>أضف أسئلة مستقلة، واربط كل سؤال بالمادة والدرس المناسب حتى يظهر للطالب بعد إتمام المراجعة.</p><button class="btn primary" id="openQuestionBankBtn" type="button">＋ إدارة الأسئلة التدريبية</button></article>
+  </div>
   <div class="card">
     <div class="sectionHead"><div><h3 style="margin:0">حسابات الطلاب</h3><p>عرض الحسابات وتحديث الاسم والشعبة.</p></div><button class="btn small" id="refreshStudentsBtn" type="button">تحديث القائمة ↻</button></div>
     <div id="studentGrid"><p class="helpText">تحميل حسابات الطلاب...</p></div>
@@ -334,7 +334,7 @@ const $ = id => document.getElementById(id);
 let authMode="login", currentUser=null, currentRole="student", selectedLevel="", selectedStream="", resources=[];
 let studyQuestions=[], lessonProgress=[], activeLessonQuiz=null;
 function toast(message){const el=$("toast");el.textContent=message;el.classList.add("show");clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove("show"),3800)}
-function modal(id,show=true){$(id).classList.toggle("show",show)}
+function modal(id,show=true){$(id).classList.toggle("show",show);if(id==="lessonQuizModal"&&!show)activeLessonQuiz=null}
 function safeUrl(value){try{const u=new URL(value);return ["https:","http:"].includes(u.protocol)?u.href:null}catch{return null}}
 function escapeHtml(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function setAuthMode(mode){authMode=mode;document.querySelectorAll("[data-auth-tab]").forEach(b=>b.classList.toggle("active",b.dataset.authTab===mode));$("authTitle").textContent=mode==="login"?"تسجيل الدخول":"إنشاء حساب جديد";$("authDesc").textContent=mode==="login"?"أدخل بيانات حسابك للمتابعة.":"أنشئ حسابًا شخصيًا لمتابعة رحلتك الدراسية."; $("nameWrap").classList.toggle("hide",mode!=="signup");$("streamWrap").classList.toggle("hide",mode!=="signup");$("fullName").required=mode==="signup";$("authSubmit").textContent=mode==="login"?"دخول":"إنشاء الحساب";$("password").autocomplete=mode==="login"?"current-password":"new-password";$("forgotBtn").classList.toggle("hide",mode!=="login")}
@@ -467,8 +467,9 @@ async function finishLessonQuiz(){
   const options=q.options||[],chosen=quiz.answers[i],right=Number(q.correct_answer),isCorrect=chosen===right;
   return '<div class="lessonQuizReviewItem"><strong>'+(i+1)+'. '+escapeHtml(q.question)+'</strong><p class="'+(isCorrect?'correct':'wrong')+'">'+(isCorrect?'✓ إجابتك صحيحة':'✕ إجابتك: '+escapeHtml(options[chosen]??"لم تُحدد"))+'</p><p>الإجابة الصحيحة: <strong>'+escapeHtml(options[right]??"")+'</strong></p>'+(q.explanation?'<p>التوضيح: '+escapeHtml(q.explanation)+'</p>':'')+'</div>';
  }).join("")+'</div>';
- $("lessonQuizFooter").innerHTML='<button class="btn" id="retryLessonQuizBtn" type="button">إعادة الاختبار</button><button class="btn primary" data-close="lessonQuizModal" type="button">إنهاء</button>';
+ $("lessonQuizFooter").innerHTML='<button class="btn" id="retryLessonQuizBtn" type="button">إعادة الاختبار</button><button class="btn primary" id="closeLessonQuizBtn" type="button">إنهاء</button>';
  $("retryLessonQuizBtn").addEventListener("click",()=>{activeLessonQuiz.index=0;activeLessonQuiz.answers=[];renderLessonQuiz()});
+ $("closeLessonQuizBtn").addEventListener("click",()=>modal("lessonQuizModal",false));
  const previous=getLessonProgress(quiz.resource.id)||{};
  await saveLessonProgress(quiz.resource.id,{reviewed_at:previous.reviewed_at||new Date().toISOString(),attempt_count:Number(previous.attempt_count||0)+1,last_score:score,best_score:Math.max(score,Number(previous.best_score||0))});
 }
@@ -639,7 +640,7 @@ async function loadStudents(){
  if(!data?.length){$("studentGrid").innerHTML='<p class="helpText">لا توجد حسابات طلاب مسجلة حتى الآن.</p>';return}
  $("studentGrid").innerHTML='<div class="adminTableWrap"><table class="adminTable"><thead><tr><th>الاسم</th><th>البريد الإلكتروني</th><th>الشعبة</th><th>تاريخ التسجيل</th><th>الإجراء</th></tr></thead><tbody>'+data.map(s=>'<tr data-student-row="'+escapeHtml(s.id)+'"><td><input class="field student-name" maxlength="80" value="'+escapeHtml(s.full_name||"")+'"></td><td><span class="studentEmail">'+escapeHtml(s.email||"غير متوفر")+'</span></td><td><input class="field student-stream" maxlength="80" value="'+escapeHtml(s.stream||"")+'"></td><td>'+escapeHtml(s.created_at?new Date(s.created_at).toLocaleDateString("ar-DZ"):"—")+'</td><td><button class="btn small" type="button" data-save-student>حفظ</button></td></tr>').join("")+'</tbody></table></div>';
 }
-async function refreshSession(){if(!supabase){$("configNotice").classList.remove("hide");return}const {data:{session}}=await supabase.auth.getSession();if(session?.user)await loadProfile(session.user);else updateAccount(null);await loadResources();supabase.auth.onAuthStateChange((_event,session)=>{setTimeout(async()=>{if(session?.user)await loadProfile(session.user);else updateAccount(null)},0)})}
+async function refreshSession(){if(!supabase){$("configNotice").classList.remove("hide");return}const {data:{session}}=await supabase.auth.getSession();if(session?.user)await loadProfile(session.user);else updateAccount(null);await loadResources();supabase.auth.onAuthStateChange((_event,session)=>{setTimeout(async()=>{if(session?.user)await loadProfile(session.user);else{updateAccount(null);await loadLessonProgress();renderResources(resources)}},0)})}
 $("themeBtn").addEventListener("click",()=>{document.documentElement.classList.toggle("light");localStorage.setItem("rr-theme",document.documentElement.classList.contains("light")?"light":"dark");$("themeBtn").textContent=document.documentElement.classList.contains("light")?"☾":"☀"});
 if(localStorage.getItem("rr-theme")==="light"){document.documentElement.classList.add("light");$("themeBtn").textContent="☾"}
 $("menuBtn").addEventListener("click",()=>$("navlinks").classList.toggle("open"));document.querySelectorAll("#navlinks a").forEach(a=>a.addEventListener("click",()=>$("navlinks").classList.remove("open")));
