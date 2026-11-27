@@ -91,7 +91,7 @@
 
 ## تشغيل المساعد الذكي عبر Cloudflare
 
-تعمل واجهة المساعد عبر Cloudflare Pages Function الموجودة في `functions/api/study-assistant.js`، وتستخدم Workers AI بالنموذج `@cf/google/gemma-4-26b-a4b-it`. لا يوجد `HF_TOKEN` أو مفتاح نموذج سري داخل ملفات الموقع.
+تعمل واجهة المساعد عبر Cloudflare Pages Function الموجودة في `functions/api/study-assistant.js`، وتستخدم Workers AI بالنموذج `@cf/google/gemma-4-26b-a4b-it`. لا يحتاج هذا الإعداد إلى وضع مفتاح سري في ملفات المتصفح أو المستودع.
 
 ### إعداد الربط
 1. افتح **Cloudflare → Workers & Pages → مشروع Pages**.
@@ -113,6 +113,7 @@
 - `supabase-schema.sql`: الجداول وسياسات الوصول والتريغرات.
 - `supabase-lesson-quiz-upgrade.sql`: جدول بنك الأسئلة وجدول تقدم الطالب ومحاولاته.
 - `supabase-student-analytics-upgrade.sql`: مستوى الطالب ومزامنة البريد وسياسة قراءة التقدم للمسؤول وتفعيل Realtime.
+- `supabase-security-hardening.sql`: مصادقة المسؤول الثنائية، وحماية سياسات RLS، وحد الاستخدام اليومي للمساعد.
 
 ## ملاحظات
 
@@ -190,4 +191,4 @@ where id = (select id from auth.users where email = 'YOUR_LOGIN_EMAIL');
 
 لتطبيق تحديث قاعدة البيانات على مشروع Supabase الحالي، افتح **SQL Editor** ونفّذ محتوى `supabase-student-analytics-upgrade.sql` مرة واحدة. هذا التحديث يضيف حقل المستوى، يزامن بريد الحساب، ويمنح المسؤول قراءة التقدم ويضيف الجدولين إلى Realtime. التحديث مطبق بالفعل على المشروع المرتبط حالياً.
 
-لا يمكن للمتصفح إيقاف حساب Auth أو حذفه بأمان؛ ذلك يتطلب Edge Function موثوقة تتحقق من هوية المسؤول وتستخدم صلاحيات الخادم دون كشف مفتاح `service_role`.
+لا تنفّذ إيقاف حساب Auth أو حذفه مباشرة من المتصفح؛ أي إدارة لحالة حسابات Auth مستقبلاً يجب أن تمر عبر دالة خادمية موثوقة تتحقق من هوية المسؤول ولا تكشف مفتاح `service_role`.
