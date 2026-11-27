@@ -47,6 +47,44 @@ function cleanHistory(value) {
   });
 }
 
+function getTextContent(value, depth = 0) {
+  if (depth > 6 || value == null) return "";
+  if (typeof value === "string") return value.trim();
+  if (Array.isArray(value)) {
+    return value.map(part => getTextContent(part, depth + 1)).filter(Boolean).join("\n").trim();
+  }
+  if (typeof value !== "object") return "";
+  if (typeof value.text === "string" && value.text.trim()) return value.text.trim();
+  if (typeof value.output_text === "string" && value.output_text.trim()) return value.output_text.trim();
+  if (typeof value.refusal === "string" && value.refusal.trim()) return value.refusal.trim();
+  if (value.content !== undefined) return getTextContent(value.content, depth + 1);
+  if (value.response !== undefined) return getTextContent(value.response, depth + 1);
+  if (value.output !== undefined) return getTextContent(value.output, depth + 1);
+  if (value.message !== undefined) return getTextContent(value.message, depth + 1);
+  return "";
+}
+
+function extractAssistantAnswer(result) {
+  const candidates = [
+    result?.choices?.[0]?.message?.content,
+    result?.choices?.[0]?.message?.refusal,
+    result?.message?.content,
+    result?.response,
+    result?.output_text,
+    result?.generated_text,
+    result?.text,
+    result?.answer,
+    result?.result?.choices?.[0]?.message?.content,
+    result?.result?.response,
+    result?.output?.[0]?.content
+  ];
+  for (const candidate of candidates) {
+    const text = getTextContent(candidate);
+    if (text) return text;
+  }
+  return "";
+}
+
 export async function onRequest({ request, env }) {
   if (request.method !== "POST") return json({ error: "طريقة الطلب غير مدعومة." }, 405);
 
@@ -282,20 +320,30 @@ export async function onRequest({ request, env }) {
 
     const aiOptions = {
       messages,
-      max_completion_tokens: mode === "solve_exam" ? 1700 : mode === "explain" ? 1400 : mode === "quiz" ? 1200 : 800,
+      modalities: ["text"],
+      n: 1,
+      // Gemma 4 enables reasoning by default. Spend the output budget on the visible answer.
+      chat_template_kwargs: { enable_thinking: false },
+      max_completion_tokens: mode === "solve_exam" ? 2000 : mode === "explain" ? 1800 : mode === "quiz" ? 1600 : 1200,
       temperature: mode === "solve_exam" ? 0.2 : 0.5
     };
     if (mode === "solve_exam") aiOptions.image = examImageData;
     const result = await env.AI.run(MODEL, aiOptions);
+    const answer = extractAssistantAnswer(result);
 
-    const choiceText = result?.choices?.[0]?.message?.content;
-    const answer = typeof choiceText === "string" ? choiceText.trim()
-      : typeof result?.response === "string" ? result.response.trim()
-      : typeof result?.output_text === "string" ? result.output_text.trim()
-      : "";
     if (!answer) {
-      console.error("Workers AI returned an empty response.");
-      return json({ error: "لم ينتج النموذج إجابة نصية. حاول إعادة صياغة السؤال." }, 502);
+      const choice = result?.choices?.[0];
+      const messageResult = choice?.message;
+      console.error("Workers AI returned no visible text.", {
+        model: MODEL,
+        resultType: Array.isArray(result) ? "array" : typeof result,
+        resultKeys: result && typeof result === "object" ? Object.keys(result).slice(0, 16) : [],
+        choicesCount: Array.isArray(result?.choices) ? result.choices.length : null,
+        finishReason: choice?.finish_reason || choice?.finishReason || null,
+        messageKeys: messageResult && typeof messageResult === "object" ? Object.keys(messageResult).slice(0, 16) : [],
+        contentType: Array.isArray(messageResult?.content) ? "array" : typeof messageResult?.content
+      });
+      return json({ error: "وصل رد من النموذج، لكنه لم يتضمن نصاً قابلاً للعرض. حاول مجدداً بعد لحظات." }, 502);
     }
 
     return json({
