@@ -460,7 +460,7 @@ function updateAccount(user,role="student",profile=null){
  $("accountAction").textContent=user?"تحديث الملف الشخصي":"تسجيل الدخول";
  const displayName=(profile?.full_name||user?.user_metadata?.full_name||"").trim();
  $("accountTitle").textContent=user?(displayName||user.email):"مساحة التلميذ";
- $("accountSub").textContent=user?(user.email+" • "+(adminAccess?"مسؤول موثّق بخطوتين":role==="admin"?"حساب مسؤول — التحقق مطلوب":"حساب تلميذ")):"سجّل الدخول لمزامنة حسابك وبياناتك.";
+ $("accountSub").textContent=user?(user.email+" • "+(isAdminPortal()?(adminAccess?"مسؤول موثّق بخطوتين":"بوابة المسؤول — التحقق مطلوب"):"تم تسجيل الدخول")):"سجّل الدخول لمزامنة حسابك وبياناتك.";
  $("avatar").textContent=user?(displayName||user.email||"م").trim().charAt(0).toUpperCase():"ز";
  $("adminNavLink").classList.add("hide");
  $("adminPanel").classList.toggle("hide",!adminAccess);
