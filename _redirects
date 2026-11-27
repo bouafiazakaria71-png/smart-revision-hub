@@ -2,5 +2,5 @@
 / /student/ 302
 /admin /admin/ 301
 /student /student/ 301
-/admin/ / 200
-/student/ / 200
+/admin/ /index.html 200
+/student/ /index.html 200
