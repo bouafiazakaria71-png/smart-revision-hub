@@ -130,7 +130,7 @@ body{background:radial-gradient(ellipse at 78% -8%,#24517b55,transparent 42%),ra
 </div></header>
 <main>
 <section class="wrap adminWelcome" id="adminWelcome" aria-live="polite"><div class="welcomeIcon">✦</div><div><strong id="adminWelcomeTitle">مرحباً بك في حساب المسؤول زكريا</strong><span>لوحة التحكم وإدارة المحتوى أصبحت متاحة لك.</span></div></section>
-<section class="wrap hero" id="home"><div><span class="eyebrow">✦ تعلّم بذكاء، وتقدّم بثقة</span><h1>طريقك إلى التفوق يبدأ من <span class="gradient">هنا.</span></h1><p>منصة مراجعة منظمة لتلاميذ التعليم الثانوي في الجزائر، تجمع الدروس والملخصات والتمارين في تجربة بسيطة وسريعة.</p><div class="heroBtns"><button class="btn primary" id="heroStart">ابدأ المراجعة <span>←</span></button><a class="btn" href="#library">استكشف المكتبة</a></div><div class="notice" id="configNotice">يعمل الموقع بوضع العرض حاليًا. لتفعيل الحسابات والحفظ السحابي، أكمل إعداد Supabase كما هو موضح في ملف README.</div></div><div class="heroArt" role="img" aria-label="رسم تعليمي لكتاب مفتوح ومصباح أفكار وأدوات دراسة">
+<section class="wrap hero" id="home"><div><span class="eyebrow">✦ تعلّم بذكاء، وتقدّم بثقة</span><h1>طريقك إلى التفوق يبدأ من <span class="gradient">هنا.</span></h1><p>منصة مراجعة منظمة لتلاميذ التعليم الثانوي في الجزائر، تجمع الدروس والملخصات والتمارين في تجربة بسيطة وسريعة.</p><div class="heroBtns"><button class="btn primary" id="heroStart">ابدأ المراجعة <span>←</span></button><a class="btn" href="#library">استكشف المكتبة</a></div><div class="notice hide" id="configNotice">يعمل الموقع بوضع العرض حاليًا. لتفعيل الحسابات والحفظ السحابي، أكمل إعداد Supabase كما هو موضح في ملف README.</div></div><div class="heroArt" role="img" aria-label="رسم تعليمي لكتاب مفتوح ومصباح أفكار وأدوات دراسة">
   <div class="heroGlow"></div>
   <div class="learningArt">
     <div class="artBadge artBadgeTop">✦ تعلّم بذكاء</div>
@@ -416,6 +416,6 @@ $("summarizeLessonBtn").addEventListener("click",()=>askStudyAssistant("summariz
 $("quizLessonBtn").addEventListener("click",()=>askStudyAssistant("quiz"));
 $("explainLessonBtn").addEventListener("click",()=>askStudyAssistant("explain"));
 $("assistantLesson").addEventListener("change",()=>{const r=resources.find(x=>x.id===$("assistantLesson").value);$("assistantHint").textContent=r?"تم اختيار: "+r.title+". ستعتمد إجابات المساعد على ملف الدرس عند توفر PDF.":"الأسئلة العامة لا ترتبط بدرس محدد."});
-$("year").textContent=new Date().getFullYear();if(!configured){$("configNotice").textContent="وضع المعاينة: الواجهة تعمل، لكن الحسابات والمكتبة السحابية تحتاج إعداد Supabase. اتبع التعليمات في README.md."}refreshSession();
+$("year").textContent=new Date().getFullYear();if(!configured){$("configNotice").textContent="وضع المعاينة: الواجهة تعمل، لكن الحسابات والمكتبة السحابية تحتاج إعداد Supabase. اتبع التعليمات في README.md.";$("configNotice").classList.remove("hide")}else{$("configNotice").classList.add("hide")}refreshSession();
 </script>
 </body></html>
