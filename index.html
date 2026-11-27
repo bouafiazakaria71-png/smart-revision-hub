@@ -236,8 +236,8 @@ body{background:radial-gradient(ellipse at 78% -8%,#24517b55,transparent 42%),ra
 <button class="btn primary" type="submit" id="saveResourceBtn">حفظ المورد</button></form></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script type="module">
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/+esm";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js?v=20261127-1200";
 const configured = /^https:\/\//.test(SUPABASE_URL) && !SUPABASE_URL.includes("YOUR_PROJECT") && SUPABASE_ANON_KEY.length > 20 && !SUPABASE_ANON_KEY.includes("YOUR_ANON");
 const supabase = configured ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}) : null;
 const $ = id => document.getElementById(id);
@@ -248,7 +248,18 @@ function safeUrl(value){try{const u=new URL(value);return ["https:","http:"].inc
 function escapeHtml(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function setAuthMode(mode){authMode=mode;document.querySelectorAll("[data-auth-tab]").forEach(b=>b.classList.toggle("active",b.dataset.authTab===mode));$("authTitle").textContent=mode==="login"?"تسجيل الدخول":"إنشاء حساب جديد";$("authDesc").textContent=mode==="login"?"أدخل بيانات حسابك للمتابعة.":"أنشئ حسابًا شخصيًا لمتابعة رحلتك الدراسية."; $("nameWrap").classList.toggle("hide",mode!=="signup");$("streamWrap").classList.toggle("hide",mode!=="signup");$("fullName").required=mode==="signup";$("authSubmit").textContent=mode==="login"?"دخول":"إنشاء الحساب";$("password").autocomplete=mode==="login"?"current-password":"new-password";$("forgotBtn").classList.toggle("hide",mode!=="login")}
 function openAuth(mode="login"){setAuthMode(mode);modal("authModal")}
-function updateAccount(user,role="student",profile=null){currentUser=user;currentRole=role;$("loginOpen").classList.toggle("hide",!!user);$("signupOpen").classList.toggle("hide",!!user);$("logoutBtn").classList.toggle("hide",!user);$("accountAction").textContent=user?"تحديث الملف الشخصي":"تسجيل الدخول";const displayName=(profile?.full_name||user?.user_metadata?.full_name||"").trim();$("accountTitle").textContent=user?(displayName||user.email):"مساحة التلميذ";$("accountSub").textContent=user?(user.email+" • "+(role==="admin"?"مسؤول المنصة":"حساب تلميذ")):"سجّل الدخول لمزامنة حسابك وبياناتك.";$("avatar").textContent=user?(displayName||user.email||"م").trim().charAt(0).toUpperCase():"ز";$("addResourceBtn").classList.toggle("hide",role!=="admin");$("adminPanel").classList.toggle("hide",role!=="admin"||!user);const welcome=$("adminWelcome");if(welcome){welcome.classList.toggle("show",!!user&&role==="admin");$("adminWelcomeTitle").textContent="مرحباً بك في حساب المسؤول زكريا"}}
+function updateAccount(user,role="student",profile=null){
+ const nextUserId=user?.id||null;
+ if(nextUserId!==assistantHistoryUserId){
+  const previousUserId=assistantHistoryUserId;
+  assistantHistoryUserId=nextUserId;
+  assistantHistory=[];
+  if(nextUserId){
+   try{const saved=JSON.parse(sessionStorage.getItem("smartRevisionChat:"+nextUserId)||"[]");if(Array.isArray(saved))assistantHistory=saved.filter(x=>x&&["user","assistant"].includes(x.role)&&typeof x.content==="string").slice(-8)}catch{assistantHistory=[]}
+  }
+  if(!nextUserId&&previousUserId){try{sessionStorage.removeItem("smartRevisionChat:"+previousUserId)}catch{}}
+ }
+ currentUser=user;currentRole=role;$("loginOpen").classList.toggle("hide",!!user);$("signupOpen").classList.toggle("hide",!!user);$("logoutBtn").classList.toggle("hide",!user);$("accountAction").textContent=user?"تحديث الملف الشخصي":"تسجيل الدخول";const displayName=(profile?.full_name||user?.user_metadata?.full_name||"").trim();$("accountTitle").textContent=user?(displayName||user.email):"مساحة التلميذ";$("accountSub").textContent=user?(user.email+" • "+(role==="admin"?"مسؤول المنصة":"حساب تلميذ")):"سجّل الدخول لمزامنة حسابك وبياناتك.";$("avatar").textContent=user?(displayName||user.email||"م").trim().charAt(0).toUpperCase():"ز";$("addResourceBtn").classList.toggle("hide",role!=="admin");$("adminPanel").classList.toggle("hide",role!=="admin"||!user);const welcome=$("adminWelcome");if(welcome){welcome.classList.toggle("show",!!user&&role==="admin");$("adminWelcomeTitle").textContent="مرحباً بك في حساب المسؤول زكريا"}}
 async function loadProfile(user){let profile=null,role="student";const {data,error}=await supabase.from("profiles").select("full_name,stream,role,email").eq("id",user.id).maybeSingle();if(error)console.warn("profile",error.message);if(data){profile=data;role=data.role||"student"}updateAccount(user,role,profile);if(role==="admin")await loadStudents()}
 async function loadResources(){if(!supabase){renderResources([]);return}const {data,error}=await supabase.from("study_resources").select("id,title,subject,level,stream,kind,description,file_url,video_url,questions,created_at").order("created_at",{ascending:false}).limit(100);if(error){console.error(error);toast("تعذر تحميل المكتبة. تحقق من تحديث قاعدة البيانات وسياسات الوصول.");resources=[];renderResources([]);renderAssistantLessons();return}resources=data||[];renderResources(resources);renderAssistantLessons()}
 function renderResources(items){
@@ -276,7 +287,12 @@ function renderAssistantLessons(){
  if(resources.some(r=>r.id===previous))select.value=previous;
 }
 let assistantHistory=[];
+let assistantHistoryUserId=null;
 let assistantBusy=false;
+function saveAssistantHistory(){
+ if(!assistantHistoryUserId)return;
+ try{sessionStorage.setItem("smartRevisionChat:"+assistantHistoryUserId,JSON.stringify(assistantHistory.slice(-8)))}catch{}
+}
 function addAssistantBubble(role,content,extraClass=""){
  const el=document.createElement("div");el.className="bubble "+role+(extraClass?" "+extraClass:"");el.textContent=content;
  $("chatlog").appendChild(el);$("chatlog").scrollTop=$("chatlog").scrollHeight;return el;
@@ -311,7 +327,7 @@ async function askStudyAssistant(mode="ask",messageOverride=null){
    const answer=data.answer.trim();
    addAssistantBubble("bot",answer);
    assistantHistory.push({role:"user",content:display},{role:"assistant",content:answer});
-   assistantHistory=assistantHistory.slice(-8);
+   assistantHistory=assistantHistory.slice(-8);saveAssistantHistory();
    $("assistantHint").textContent=selected?"المحادثة مرتبطة بدرس: "+selected.title+". يمكنك متابعة طرح الأسئلة حوله.":"يمكنك متابعة طرح الأسئلة العامة أو اختيار درس لربط المحادثة بمحتواه.";
  }catch(error){
    waiting.remove();
@@ -416,6 +432,13 @@ $("summarizeLessonBtn").addEventListener("click",()=>askStudyAssistant("summariz
 $("quizLessonBtn").addEventListener("click",()=>askStudyAssistant("quiz"));
 $("explainLessonBtn").addEventListener("click",()=>askStudyAssistant("explain"));
 $("assistantLesson").addEventListener("change",()=>{const r=resources.find(x=>x.id===$("assistantLesson").value);$("assistantHint").textContent=r?"تم اختيار: "+r.title+". ستعتمد إجابات المساعد على ملف الدرس عند توفر PDF.":"الأسئلة العامة لا ترتبط بدرس محدد."});
-$("year").textContent=new Date().getFullYear();if(!configured){$("configNotice").textContent="وضع المعاينة: الواجهة تعمل، لكن الحسابات والمكتبة السحابية تحتاج إعداد Supabase. اتبع التعليمات في README.md.";$("configNotice").classList.remove("hide")}else{$("configNotice").classList.add("hide")}refreshSession();
+$("year").textContent=new Date().getFullYear();
+if(!configured){
+ $("configNotice").textContent="تعذر تهيئة اتصال Supabase في هذه النسخة. تأكد من تحميل config.js ومفتاح Publishable ثم أعد تحديث الصفحة.";
+ $("configNotice").classList.remove("hide");
+}else{
+ $("configNotice").classList.add("hide");
+}
+refreshSession();
 </script>
 </body></html>
