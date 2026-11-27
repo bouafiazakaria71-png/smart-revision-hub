@@ -109,6 +109,9 @@
 ## الملفات
 
 - `index.html`: الواجهة المتجاوبة وسلوك الأزرار والنماذج.
+- `_redirects`: توجيه الزائر إلى بوابة الطلاب والفصل بين مساري الطالب والمسؤول.
+- `_headers`: ترويسات الأمان وسياسة Content Security Policy.
+- `functions/api/study-assistant.js`: المساعد الذكي على خادم Cloudflare Pages.
 - `config.js`: إعدادات Supabase العامة (المفتاح العام فقط).
 - `supabase-schema.sql`: الجداول وسياسات الوصول والتريغرات.
 - `supabase-lesson-quiz-upgrade.sql`: جدول بنك الأسئلة وجدول تقدم الطالب ومحاولاته.
