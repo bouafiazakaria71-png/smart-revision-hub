@@ -1,0 +1,3 @@
+# بوابة المسؤول على نفس نطاق Cloudflare Pages
+/admin /?panel=admin 302
+/admin/ /?panel=admin 302
