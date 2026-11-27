@@ -2,6 +2,7 @@ const SUPABASE_URL = "https://fxrfxilxbxrkxadgfkxw.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_4Sr8fY-026SumO5qSyc_8A_RbNa7TTo";
 const MODEL = "@cf/google/gemma-4-26b-a4b-it";
 const MAX_LESSON_TEXT = 6000;
+const MAX_DAILY_REQUESTS = 25;
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status,
@@ -64,9 +65,14 @@ export async function onRequest({ request, env }) {
 
   let payload;
   try {
-    const length = Number(request.headers.get("content-length") || 0);
-    if (length > 18000) return json({ error: "حجم الطلب كبير جداً. اختصر السؤال أو نص الدرس." }, 413);
-    payload = await request.json();
+    const rawBody = await request.text();
+    if (new TextEncoder().encode(rawBody).byteLength > 18000) {
+      return json({ error: "حجم الطلب كبير جداً. اختصر السؤال أو نص الدرس." }, 413);
+    }
+    payload = JSON.parse(rawBody);
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+      return json({ error: "بيانات الطلب غير صالحة." }, 400);
+    }
   } catch {
     return json({ error: "بيانات الطلب غير صالحة." }, 400);
   }
@@ -96,7 +102,7 @@ export async function onRequest({ request, env }) {
     }
 
     const profileRows = await supabaseGet(
-      "/rest/v1/profiles?select=stream&id=eq." + encodeURIComponent(user.id) + "&limit=1",
+      "/rest/v1/profiles?select=level,stream,role&id=eq." + encodeURIComponent(user.id) + "&limit=1",
       authorization
     );
     const profile = Array.isArray(profileRows) ? profileRows[0] : null;
@@ -111,8 +117,34 @@ export async function onRequest({ request, env }) {
       );
       resource = Array.isArray(rows) ? rows[0] : null;
       if (!resource) return json({ error: "لم أجد الدرس المختار أو لا تملك صلاحية قراءته." }, 404);
+      if (profile.role !== "admin") {
+        const levelMatches = profile.level && resource.level === profile.level;
+        const streamMatches = !resource.stream || resource.stream === profile.stream;
+        if (!levelMatches || !streamMatches) {
+          return json({ error: "هذا الدرس لا يطابق المستوى والشعبة المحفوظين في حسابك. حدّث مسارك الدراسي من بوابة الطلاب أولاً." }, 403);
+        }
+      }
     } else if (mode !== "ask") {
       return json({ error: "اختر درساً من القائمة أولاً." }, 400);
+    }
+
+    const quotaResponse = await fetch(SUPABASE_URL + "/rest/v1/rpc/consume_ai_request", {
+      method: "POST",
+      headers: {
+        "apikey": SUPABASE_PUBLISHABLE_KEY,
+        "Authorization": authorization,
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: "{}"
+    });
+    if (!quotaResponse.ok) {
+      console.error("AI quota check failed:", quotaResponse.status);
+      return json({ error: "تعذر التحقق من حد استخدام المساعد. لم يُنفّذ الطلب؛ حاول لاحقاً." }, 503);
+    }
+    const dailyCount = await quotaResponse.json().catch(() => null);
+    if (!Number.isInteger(dailyCount) || dailyCount < 1 || dailyCount > MAX_DAILY_REQUESTS) {
+      return json({ error: "بلغت الحد اليومي للمساعد الذكي (25 طلباً). حاول مجدداً غداً." }, 429);
     }
 
     const title = String(resource?.title || "سؤال دراسي عام");
@@ -157,7 +189,7 @@ export async function onRequest({ request, env }) {
       ...cleanHistory(payload.history),
       {
         role: "user",
-        content: "مستوى التلميذ وشعبته: " + String(profile.stream || "غير محددة") +
+        content: "مستوى التلميذ: " + String(profile.level || "غير محدد") + " | الشعبة: " + String(profile.stream || "غير محددة") +
           "\n\n" + context + "\n\nطلب الطالب:\n" + task
       }
     ];
