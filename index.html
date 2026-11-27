@@ -220,11 +220,24 @@ body{background:radial-gradient(ellipse at 78% -8%,#1d527255,transparent 43%),ra
 .lessonQuizReviewItem .wrong{color:var(--danger)}
 @media(max-width:560px){.lessonJourney{padding:11px}.lessonQuizDialog{max-height:92vh}.lessonQuizQuestion{font-size:16px}.lessonQuizFooter{flex-wrap:wrap}.lessonQuizFooter .btn{flex:1}}
 
+
+/* Separate student and administrator portals */
+body.admin-portal #home,
+body.admin-portal .stats,
+body.admin-portal #features,
+body.admin-portal #levels,
+body.admin-portal #library,
+body.admin-portal #assistant,
+body.admin-portal footer.footer {display:none!important}
+body.admin-portal #navlinks,
+body.admin-portal #menuBtn {display:none!important}
+body.admin-portal main>#adminPanel {padding-top:24px;min-height:calc(100vh - 130px)}
+body.admin-portal .adminWelcome {width:min(1160px,calc(100% - 36px))}
 </style>
 </head>
 <body>
 <header class="topbar"><div class="wrap nav">
-<a class="brand" href="#home"><span class="logo" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M24 5 29 18 43 24 29 30 24 43 19 30 5 24 19 18Z" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="24" cy="24" r="5" fill="currentColor"/></svg></span><span>علي بن أبي طالب<small>منصة المعرفة والتعلّم</small></span></a>
+<a class="brand" id="brandHomeLink" href="/student/"><span class="logo" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M24 5 29 18 43 24 29 30 24 43 19 30 5 24 19 18Z" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="24" cy="24" r="5" fill="currentColor"/></svg></span><span>علي بن أبي طالب<small>منصة المعرفة والتعلّم</small></span></a>
 <nav class="navlinks" id="navlinks"><a href="#home">الرئيسية</a><a href="#features">المميزات</a><a href="#levels">المستويات</a><a href="#library">المكتبة</a><a href="#assistant">المساعد</a><a href="/admin/" id="adminNavLink" class="hide">بوابة المسؤول</a></nav>
 <div class="actions"><button class="iconbtn" id="themeBtn" aria-label="تبديل المظهر">☀</button><button class="btn small ghost authBtn" id="loginOpen">دخول</button><button class="btn small primary authBtn" id="signupOpen">إنشاء حساب</button><button class="iconbtn menu" id="menuBtn" aria-label="القائمة">☰</button><button class="btn small hide" id="logoutBtn">خروج</button></div>
 </div></header>
@@ -327,17 +340,32 @@ body{background:radial-gradient(ellipse at 78% -8%,#1d527255,transparent 43%),ra
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/+esm";
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js?v=20261127-1200";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "/config.js?v=20261127-1200";
 const configured = /^https:\/\//.test(SUPABASE_URL) && !SUPABASE_URL.includes("YOUR_PROJECT") && SUPABASE_ANON_KEY.length > 20 && !SUPABASE_ANON_KEY.includes("YOUR_ANON");
 const supabase = configured ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}) : null;
 const $ = id => document.getElementById(id);
 let authMode="login", currentUser=null, currentRole="student", selectedLevel="", selectedStream="", resources=[];
+
 let studyQuestions=[], lessonProgress=[], activeLessonQuiz=null;
+function isAdminPortal(){
+ return /^\/admin\/?$/.test(location.pathname) ||
+  (location.pathname==="/" && new URLSearchParams(location.search).get("panel")==="admin");
+}
+function hasAdminAccess(){return isAdminPortal() && !!currentUser && currentRole==="admin"}
+function applyPortalMode(){
+ const adminPortal=isAdminPortal();
+ document.body.classList.toggle("admin-portal",adminPortal);
+ const brand=$("brandHomeLink");if(brand)brand.href=adminPortal?"/admin/":"/student/";
+ $("signupOpen").classList.toggle("hide",adminPortal || !!currentUser);
+ const signupTab=document.querySelector('[data-auth-tab="signup"]');if(signupTab)signupTab.classList.toggle("hide",adminPortal);
+ $("adminNavLink").classList.add("hide");
+}
+applyPortalMode();
 function toast(message){const el=$("toast");el.textContent=message;el.classList.add("show");clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove("show"),3800)}
 function modal(id,show=true){$(id).classList.toggle("show",show);if(id==="lessonQuizModal"&&!show)activeLessonQuiz=null}
 function safeUrl(value){try{const u=new URL(value);return ["https:","http:"].includes(u.protocol)?u.href:null}catch{return null}}
 function escapeHtml(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-function setAuthMode(mode){authMode=mode;document.querySelectorAll("[data-auth-tab]").forEach(b=>b.classList.toggle("active",b.dataset.authTab===mode));$("authTitle").textContent=mode==="login"?"تسجيل الدخول":"إنشاء حساب جديد";$("authDesc").textContent=mode==="login"?"أدخل بيانات حسابك للمتابعة.":"أنشئ حسابًا شخصيًا لمتابعة رحلتك الدراسية."; $("nameWrap").classList.toggle("hide",mode!=="signup");$("streamWrap").classList.toggle("hide",mode!=="signup");$("fullName").required=mode==="signup";$("authSubmit").textContent=mode==="login"?"دخول":"إنشاء الحساب";$("password").autocomplete=mode==="login"?"current-password":"new-password";$("forgotBtn").classList.toggle("hide",mode!=="login")}
+function setAuthMode(mode){if(isAdminPortal()&&mode==="signup")mode="login";authMode=mode;document.querySelectorAll("[data-auth-tab]").forEach(b=>b.classList.toggle("active",b.dataset.authTab===mode));$("authTitle").textContent=mode==="login"?"تسجيل الدخول":"إنشاء حساب جديد";$("authDesc").textContent=mode==="login"?"أدخل بيانات حسابك للمتابعة.":"أنشئ حسابًا شخصيًا لمتابعة رحلتك الدراسية."; $("nameWrap").classList.toggle("hide",mode!=="signup");$("streamWrap").classList.toggle("hide",mode!=="signup");$("fullName").required=mode==="signup";$("authSubmit").textContent=mode==="login"?"دخول":"إنشاء الحساب";$("password").autocomplete=mode==="login"?"current-password":"new-password";$("forgotBtn").classList.toggle("hide",mode!=="login")}
 function openAuth(mode="login"){setAuthMode(mode);modal("authModal")}
 function updateAccount(user,role="student",profile=null){
  const nextUserId=user?.id||null;
@@ -345,19 +373,27 @@ function updateAccount(user,role="student",profile=null){
    assistantHistoryUserId=nextUserId;
    assistantHistory=readAssistantHistory(nextUserId||"guest");
   }
- currentUser=user;currentRole=role;$("loginOpen").classList.toggle("hide",!!user);$("signupOpen").classList.toggle("hide",!!user);$("logoutBtn").classList.toggle("hide",!user);$("accountAction").textContent=user?"تحديث الملف الشخصي":"تسجيل الدخول";const displayName=(profile?.full_name||user?.user_metadata?.full_name||"").trim();$("accountTitle").textContent=user?(displayName||user.email):"مساحة التلميذ";$("accountSub").textContent=user?(user.email+" • "+(role==="admin"?"مسؤول المنصة":"حساب تلميذ")):"سجّل الدخول لمزامنة حسابك وبياناتك.";$("avatar").textContent=user?(displayName||user.email||"م").trim().charAt(0).toUpperCase():"ز";$("adminNavLink").classList.toggle("hide",role!=="admin"||!user);$("adminPanel").classList.toggle("hide",role!=="admin"||!user);const welcome=$("adminWelcome");if(welcome){welcome.classList.toggle("show",!!user&&role==="admin");$("adminWelcomeTitle").textContent="مرحباً بك في حساب المسؤول زكريا"}}
-async function loadProfile(user){let profile=null,role="student";const {data,error}=await supabase.from("profiles").select("full_name,stream,role,email").eq("id",user.id).maybeSingle();if(error)console.warn("profile",error.message);if(data){profile=data;role=data.role||"student"}updateAccount(user,role,profile);if(role==="admin")await loadStudents();await loadLessonProgress();renderResources(resources);handleAdminRoute()}
+ currentUser=user;currentRole=role;applyPortalMode();const adminAccess=hasAdminAccess();$("loginOpen").classList.toggle("hide",!!user);$("signupOpen").classList.toggle("hide",!!user||isAdminPortal());$("logoutBtn").classList.toggle("hide",!user);$("accountAction").textContent=user?"تحديث الملف الشخصي":"تسجيل الدخول";const displayName=(profile?.full_name||user?.user_metadata?.full_name||"").trim();$("accountTitle").textContent=user?(displayName||user.email):"مساحة التلميذ";$("accountSub").textContent=user?(user.email+" • "+(adminAccess?"حساب المسؤول":"حساب تلميذ")):"سجّل الدخول لمزامنة حسابك وبياناتك.";$("avatar").textContent=user?(displayName||user.email||"م").trim().charAt(0).toUpperCase():"ز";$("adminNavLink").classList.add("hide");$("adminPanel").classList.toggle("hide",!adminAccess);const welcome=$("adminWelcome");if(welcome){welcome.classList.toggle("show",adminAccess);$("adminWelcomeTitle").textContent="مرحباً بك في بوابة المسؤول"}}
+async function loadProfile(user){let profile=null,role="student";const {data,error}=await supabase.from("profiles").select("full_name,stream,role,email").eq("id",user.id).maybeSingle();if(error)console.warn("profile",error.message);if(data){profile=data;role=data.role||"student"}updateAccount(user,role,profile);handleAdminRoute();if(hasAdminAccess())await loadStudents();await loadLessonProgress();renderResources(resources)}
 function handleAdminRoute(){
- const params=new URLSearchParams(location.search);
- if(params.get("panel")!=="admin")return;
- if(!currentUser){openAuth("login");return}
- if(currentRole!=="admin"){
-  toast("هذا الرابط مخصص لحساب المسؤول المعتمد فقط.");
-  params.delete("panel");
-  const query=params.toString();
-  history.replaceState(null,"",location.pathname+(query?"?"+query:"")+location.hash);
+ applyPortalMode();
+ if(!isAdminPortal()){
+  $("adminPanel").classList.add("hide");
+  $("adminWelcome").classList.remove("show");
   return;
  }
+ if(!currentUser){
+  $("adminPanel").classList.add("hide");
+  $("adminWelcome").classList.remove("show");
+  openAuth("login");
+  return;
+ }
+ if(!hasAdminAccess()){
+  toast("هذا المسار مخصص لحساب المسؤول المعتمد فقط. ستتم إعادتك إلى بوابة الطلاب.");
+  location.replace("/student/");
+  return;
+ }
+ $("adminPanel").classList.remove("hide");
  $("adminPanel").scrollIntoView({behavior:"smooth",block:"start"});
 }
 async function loadResources(){
@@ -386,7 +422,7 @@ function renderResources(items){
   const pdf=safeUrl(r.file_url||""),video=safeUrl(r.video_url||"");
   const questions=questionsForResource(r);
   const progress=getLessonProgress(r.id),reviewed=!!progress?.reviewed_at;
-  const adminButtons=currentRole==="admin"?'<div class="resourceActions"><button class="btn small" type="button" data-edit-resource="'+escapeHtml(r.id)+'">تعديل</button><button class="btn small" type="button" data-delete-resource="'+escapeHtml(r.id)+'">حذف</button></div>':'';
+  const adminButtons=hasAdminAccess()?'<div class="resourceActions"><button class="btn small" type="button" data-edit-resource="'+escapeHtml(r.id)+'">تعديل</button><button class="btn small" type="button" data-delete-resource="'+escapeHtml(r.id)+'">حذف</button></div>':'';
   const aiButtons='<div class="resourceActions"><button class="btn small" type="button" data-ai-select="'+escapeHtml(r.id)+'">اسأل عن المحتوى</button><button class="btn small" type="button" data-ai-quiz="'+escapeHtml(r.id)+'">اختبار ذكي</button></div>';
   const links=(pdf?'<a class="btn small" href="'+escapeHtml(pdf)+'" target="_blank" rel="noopener noreferrer">افتح الدرس للمراجعة ↗</a>':'')+(video?'<a class="btn small" href="'+escapeHtml(video)+'" target="_blank" rel="noopener noreferrer">شاهد الشرح ▶</a>':'');
   const journey=r.kind==="حولية"?'':('<div class="lessonJourney"><div class="lessonJourneyHead"><span class="lessonJourneyTitle">مسار التعلّم لهذا الدرس</span>'+(reviewed?'<span class="lessonDoneMark">✓ أتممت المراجعة</span>':'<span class="tag">الخطوة 1: مراجعة الدرس</span>')+'</div><p class="lessonJourneyHint">'+(reviewed?'أحسنت! انتقل الآن إلى اختبار قصير لقياس فهمك.':'افتح ملف الدرس أو شاهد الشرح، ثم اضغط «أتممت المراجعة» للانتقال إلى الاختبار.')+'</p><div class="resourceActions">'+(reviewed?'<button class="btn small" type="button" data-mark-reviewed="'+escapeHtml(r.id)+'">تحديث حالة المراجعة</button>':'<button class="btn small primary" type="button" data-mark-reviewed="'+escapeHtml(r.id)+'">✓ أتممت المراجعة</button>')+(reviewed?(questions.length?'<button class="btn small primary" type="button" data-start-lesson-quiz="'+escapeHtml(r.id)+'">اختبرني في هذا الدرس · '+questions.length+' سؤال</button>':'<span class="helpText">لم تُضف أسئلة لهذا الدرس بعد. ستظهر هنا عند إضافتها من بنك الأسئلة.</span>'):'')+'</div>'+(reviewed&&progress?.best_score!==null&&progress?.best_score!==undefined?'<span class="helpText">أفضل نتيجة سابقة: '+Number(progress.best_score)+'% · المحاولات: '+Number(progress.attempt_count||0)+'</span>':'')+'</div>');
@@ -427,7 +463,7 @@ async function markLessonReviewed(resourceId){
  toast("تم تسجيل إتمام مراجعة الدرس. أصبح الاختبار متاحاً لك.");
 }
 function openQuestionBank(){
- if(currentRole!=="admin")return toast("هذه الميزة متاحة لمسؤول المنصة فقط.");
+ if(!hasAdminAccess())return toast("هذه الميزة متاحة لمسؤول المنصة فقط.");
  const select=$("questionResourceSelect"),eligible=resources.filter(r=>r.kind!=="حولية");
  select.innerHTML='<option value="">اختر درساً...</option>'+eligible.map(r=>'<option value="'+escapeHtml(r.id)+'">'+escapeHtml([r.subject,r.title,r.level,r.stream].filter(Boolean).join(" • "))+'</option>').join("");
  if(eligible.length){select.value=eligible[0].id;renderQuestionBankExisting()}else{$("questionBankMeta").textContent="أضف درساً إلى المكتبة أولاً، ثم ارجع هنا لإضافة أسئلته.";$("questionBankExisting").innerHTML='<p class="helpText">لا توجد دروس متاحة حالياً.</p>'}
@@ -631,7 +667,7 @@ async function askStudyAssistant(mode="ask",messageOverride=null){
  }
 }
 function openResourceEditor(resource=null,initialType="درس"){
- if(currentRole!=="admin")return toast("هذه الميزة متاحة لمسؤول المنصة فقط.");
+ if(!hasAdminAccess())return toast("هذه الميزة متاحة لمسؤول المنصة فقط.");
  $("resourceForm").reset();$("resId").value=resource?.id||"";
  $("resourceTitle").textContent=resource?"تعديل المحتوى":(initialType==="حولية"?"رفع حولية جديدة":"إضافة درس جديد");
  $("saveResourceBtn").textContent=resource?"حفظ التعديلات":(initialType==="حولية"?"رفع الحولية":"حفظ الدرس");
@@ -647,7 +683,7 @@ function updateResourceFormType(){
  $("resFile").required=!$("resId").value;
 }
 async function loadStudents(){
- if(!supabase||currentRole!=="admin")return;
+ if(!supabase||!hasAdminAccess())return;
  $("studentGrid").innerHTML='<p class="helpText">تحميل حسابات الطلاب...</p>';
  const {data,error}=await supabase.from("profiles").select("id,email,full_name,stream,created_at,role").eq("role","student").order("created_at",{ascending:false}).limit(200);
  if(error){console.error(error);$("studentGrid").innerHTML='<p class="notice">تعذر تحميل الحسابات. تأكد من تنفيذ ملف تحديث قاعدة البيانات في Supabase.</p>';return}
@@ -674,7 +710,7 @@ $("addLessonResourceBtn").addEventListener("click",()=>openResourceEditor(null,"
  $("questionResourceSelect").addEventListener("change",renderQuestionBankExisting);
  $("questionBankForm").addEventListener("submit",async e=>{
   e.preventDefault();
-  if(currentRole!=="admin"||!currentUser)return toast("يلزم حساب مسؤول موثّق.");
+  if(!hasAdminAccess()||!currentUser)return toast("يلزم فتح بوابة المسؤول بحساب مسؤول موثّق.");
   const resourceId=$("questionResourceSelect").value;
   if(!resourceId)return toast("اختر الدرس الذي تريد إضافة السؤال إليه.");
   const question=$("bankQuestionText").value.trim();
@@ -689,7 +725,7 @@ $("addLessonResourceBtn").addEventListener("click",()=>openResourceEditor(null,"
  });
  $("questionBankExisting").addEventListener("click",async e=>{
   const button=e.target.closest("[data-delete-bank-question]");if(!button)return;
-  if(currentRole!=="admin"||!confirm("هل تريد حذف هذا السؤال؟"))return;
+  if(!hasAdminAccess()||!confirm("هل تريد حذف هذا السؤال؟"))return;
   const {error}=await supabase.from("study_questions").delete().eq("id",button.dataset.deleteBankQuestion);
   if(error)return toast("تعذر حذف السؤال: "+error.message);
   if(await loadBankQuestions()){renderQuestionBankExisting();renderResources(resources);toast("تم حذف السؤال.");}
@@ -706,12 +742,12 @@ $("resourceGrid").addEventListener("click",async e=>{
  if(aiSelect||aiQuiz){const id=aiSelect?aiSelect.dataset.aiSelect:aiQuiz.dataset.aiQuiz;$("assistantLesson").value=id;const r=resources.find(x=>x.id===id);$("assistant").scrollIntoView({behavior:"smooth"});if(aiQuiz)askStudyAssistant("quiz");else{$("assistantHint").textContent="اسأل الآن عن المحتوى: "+(r?.title||"");$("chatInput").focus()}return}
  const edit=e.target.closest("[data-edit-resource]"),del=e.target.closest("[data-delete-resource]");
  if(edit){const r=resources.find(x=>x.id===edit.dataset.editResource);if(r)openResourceEditor(r);return}
- if(del){if(currentRole!=="admin"||!confirm("هل أنت متأكد من حذف هذا المورد؟"))return;const {error}=await supabase.from("study_resources").delete().eq("id",del.dataset.deleteResource);if(error)return toast("تعذر الحذف: "+error.message);toast("تم حذف المورد.");await loadResources();return}
+ if(del){if(!hasAdminAccess()||!confirm("هل أنت متأكد من حذف هذا المورد؟"))return;const {error}=await supabase.from("study_resources").delete().eq("id",del.dataset.deleteResource);if(error)return toast("تعذر الحذف: "+error.message);toast("تم حذف المورد.");await loadResources();return}
 });
 $("refreshStudentsBtn").addEventListener("click",loadStudents);
 $("studentGrid").addEventListener("click",async e=>{
  const btn=e.target.closest("[data-save-student]");if(!btn)return;
- if(currentRole!=="admin")return toast("غير مصرح.");
+ if(!hasAdminAccess())return toast("غير مصرح.");
  const row=btn.closest("[data-student-row]"),id=row.dataset.studentRow;
  const full_name=row.querySelector(".student-name").value.trim(),stream=row.querySelector(".student-stream").value.trim();
  if(!full_name)return toast("اكتب اسم الطالب.");
@@ -720,7 +756,7 @@ $("studentGrid").addEventListener("click",async e=>{
  toast("تم تحديث بيانات الطالب.");await loadStudents();
 });
 $("resourceForm").addEventListener("submit",async e=>{
- e.preventDefault();if(!supabase||currentRole!=="admin"||!currentUser)return toast("يلزم حساب مسؤول موثّق.");
+ e.preventDefault();if(!supabase||!hasAdminAccess()||!currentUser)return toast("يلزم فتح بوابة المسؤول بحساب مسؤول موثّق.");
  const file=$("resFile").files[0];if(file&&(file.size>20*1024*1024||(!/\.pdf$/i.test(file.name)&&file.type!=="application/pdf")))return toast("اختر ملف PDF صالحًا لا يتجاوز 20 ميغابايت.");
  let file_url=$("resUrl").value.trim();if(file_url&&!safeUrl(file_url))return toast("أدخل رابطًا صحيحًا يبدأ بـ https://");
  const video_url=$("resVideoUrl").value.trim();if(video_url&&!safeUrl(video_url))return toast("أدخل رابط فيديو صحيحًا يبدأ بـ https://");
