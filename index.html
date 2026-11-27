@@ -616,29 +616,19 @@ async function askStudyAssistant(mode="ask",messageOverride=null){
   input.focus();
  }
 }
-function addQuizEditorRow(question={}){
- const row=document.createElement("div");row.className="quizEditorRow";
- const options=Array.isArray(question.options)?question.options:["","","",""];
- const esc=escapeHtml;
- row.innerHTML='<div class="resourceTop"><h4>سؤال جديد</h4><button class="btn small" type="button" data-remove-quiz-row>إزالة</button></div><label>نص السؤال<input class="field q-prompt" maxlength="500" value="'+esc(question.question||"")+'" placeholder="اكتب السؤال"></label><div class="quizOptionsGrid">'+[0,1,2,3].map(i=>'<label>الخيار '+(i+1)+'<input class="field q-option" maxlength="220" value="'+esc(options[i]||"")+'" placeholder="الخيار '+(i+1)+'"></label>').join("")+'</div><label>رقم الإجابة الصحيحة<select class="field q-correct">'+[1,2,3,4].map(i=>'<option value="'+(i-1)+'" '+((Number(question.correct_answer)===i-1)?'selected':'')+'>الخيار '+i+'</option>').join("")+'</select></label><label>تفسير الإجابة (اختياري)<input class="field q-explanation" maxlength="400" value="'+esc(question.explanation||"")+'" placeholder="اشرح الإجابة باختصار"></label>';
- $("quizEditor").appendChild(row);
-}
 function openResourceEditor(resource=null,initialType="درس"){
  if(currentRole!=="admin")return toast("هذه الميزة متاحة لمسؤول المنصة فقط.");
- $("resourceForm").reset();$("quizEditor").innerHTML="";$("resId").value=resource?.id||"";
+ $("resourceForm").reset();$("resId").value=resource?.id||"";
  $("resourceTitle").textContent=resource?"تعديل المحتوى":(initialType==="حولية"?"رفع حولية جديدة":"إضافة درس جديد");
  $("saveResourceBtn").textContent=resource?"حفظ التعديلات":(initialType==="حولية"?"رفع الحولية":"حفظ الدرس");
- if(resource){$("resTitle").value=resource.title||"";$("resSubject").value=resource.subject||"";$("resLevel").value=resource.level||"";$("resStream").value=resource.stream||"";$("resType").value=resource.kind||"درس";$("resDescription").value=resource.description||"";$("resUrl").value=resource.file_url||"";$("resVideoUrl").value=resource.video_url||"";(Array.isArray(resource.questions)?resource.questions:[]).forEach(addQuizEditorRow)}
+ if(resource){$("resTitle").value=resource.title||"";$("resSubject").value=resource.subject||"";$("resLevel").value=resource.level||"";$("resStream").value=resource.stream||"";$("resType").value=resource.kind||"درس";$("resDescription").value=resource.description||"";$("resUrl").value=resource.file_url||"";$("resVideoUrl").value=resource.video_url||""}
  else $("resType").value=initialType;
- if(!$("quizEditor").children.length)addQuizEditorRow();
- updateResourceFormType();
- modal("resourceModal");
+ updateResourceFormType();modal("resourceModal");
 }
 function updateResourceFormType(){
  const isPastPaper=$("resType").value==="حولية";
  $("resourceVideoField").classList.toggle("hide",isPastPaper);
- $("resourceQuizField").classList.toggle("hide",isPastPaper);
- $("resourceTypeHint").textContent=isPastPaper?"ارفع ملف الحولية بصيغة PDF وحدد المادة والمستوى والشعبة.":"أرفق ملف PDF للدرس، ويمكنك إضافة فيديو وأسئلة تدريبية اختيارياً.";
+ $("resourceTypeHint").textContent=isPastPaper?"ارفع ملف الحولية بصيغة PDF وحدد المادة والمستوى والشعبة.":"أرفق ملف PDF للدرس، ثم أضف أسئلته من بنك الأسئلة التدريبية.";
  $("resFile").required=!$("resId").value;
 }
 async function loadStudents(){
@@ -664,18 +654,44 @@ $("searchInput").addEventListener("input",()=>renderResources(resources));$("typ
 $("addLessonResourceBtn").addEventListener("click",()=>openResourceEditor(null,"درس"));
  $("addPastPaperBtn").addEventListener("click",()=>openResourceEditor(null,"حولية"));
  $("resType").addEventListener("change",updateResourceFormType);
-$("addQuizQuestionBtn").addEventListener("click",()=>addQuizEditorRow());
-$("quizEditor").addEventListener("click",e=>{const btn=e.target.closest("[data-remove-quiz-row]");if(btn){btn.closest(".quizEditorRow").remove();}});
+
+ $("openQuestionBankBtn").addEventListener("click",openQuestionBank);
+ $("questionResourceSelect").addEventListener("change",renderQuestionBankExisting);
+ $("questionBankForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  if(currentRole!=="admin"||!currentUser)return toast("يلزم حساب مسؤول موثّق.");
+  const resourceId=$("questionResourceSelect").value;
+  if(!resourceId)return toast("اختر الدرس الذي تريد إضافة السؤال إليه.");
+  const question=$("bankQuestionText").value.trim();
+  const options=[...$("questionBankForm").querySelectorAll(".bankOption")].map(x=>x.value.trim());
+  const correct_answer=Number($("bankCorrectAnswer").value);
+  if(!question||options.some(x=>!x))return toast("أكمل نص السؤال والخيارات الأربعة.");
+  const resourceQuestions=studyQuestions.filter(x=>x.resource_id===resourceId);
+  const {error}=await supabase.from("study_questions").insert({resource_id:resourceId,question,options,correct_answer,explanation:$("bankExplanation").value.trim(),sort_order:resourceQuestions.length,created_by:currentUser.id});
+  if(error)return toast("تعذر حفظ السؤال: "+error.message);
+  $("questionBankForm").reset();
+  if(await loadBankQuestions()){renderQuestionBankExisting();renderResources(resources);toast("تمت إضافة السؤال وربطه بالدرس بنجاح.");}
+ });
+ $("questionBankExisting").addEventListener("click",async e=>{
+  const button=e.target.closest("[data-delete-bank-question]");if(!button)return;
+  if(currentRole!=="admin"||!confirm("هل تريد حذف هذا السؤال؟"))return;
+  const {error}=await supabase.from("study_questions").delete().eq("id",button.dataset.deleteBankQuestion);
+  if(error)return toast("تعذر حذف السؤال: "+error.message);
+  if(await loadBankQuestions()){renderQuestionBankExisting();renderResources(resources);toast("تم حذف السؤال.");}
+ });
+
+
+
 $("resourceGrid").addEventListener("click",async e=>{
+ const markReviewed=e.target.closest("[data-mark-reviewed]");
+ if(markReviewed){await markLessonReviewed(markReviewed.dataset.markReviewed);return}
+ const startQuiz=e.target.closest("[data-start-lesson-quiz]");
+ if(startQuiz){startLessonQuiz(startQuiz.dataset.startLessonQuiz);return}
  const aiSelect=e.target.closest("[data-ai-select]"),aiQuiz=e.target.closest("[data-ai-quiz]");
  if(aiSelect||aiQuiz){const id=aiSelect?aiSelect.dataset.aiSelect:aiQuiz.dataset.aiQuiz;$("assistantLesson").value=id;const r=resources.find(x=>x.id===id);$("assistant").scrollIntoView({behavior:"smooth"});if(aiQuiz)askStudyAssistant("quiz");else{$("assistantHint").textContent="اسأل الآن عن المحتوى: "+(r?.title||"");$("chatInput").focus()}return}
- const edit=e.target.closest("[data-edit-resource]"),del=e.target.closest("[data-delete-resource]"),check=e.target.closest("[data-check-quiz]");
+ const edit=e.target.closest("[data-edit-resource]"),del=e.target.closest("[data-delete-resource]");
  if(edit){const r=resources.find(x=>x.id===edit.dataset.editResource);if(r)openResourceEditor(r);return}
  if(del){if(currentRole!=="admin"||!confirm("هل أنت متأكد من حذف هذا المورد؟"))return;const {error}=await supabase.from("study_resources").delete().eq("id",del.dataset.deleteResource);if(error)return toast("تعذر الحذف: "+error.message);toast("تم حذف المورد.");await loadResources();return}
- if(check){
-  const r=resources.find(x=>x.id===check.dataset.checkQuiz);if(!r)return;
-  (Array.isArray(r.questions)?r.questions:[]).forEach((item,i)=>{const selected=document.querySelector('input[name="quiz-'+r.id+'-'+i+'"]:checked');const feedback=$("quiz-feedback-"+r.id+"-"+i);if(!selected){feedback.textContent="اختر إجابة أولًا.";return}const correct=Number(item.correct_answer)===Number(selected.value);feedback.textContent=(correct?"✓ إجابة صحيحة. ":"الإجابة غير صحيحة. ")+(item.explanation||"");});
- }
 });
 $("refreshStudentsBtn").addEventListener("click",loadStudents);
 $("studentGrid").addEventListener("click",async e=>{
@@ -693,15 +709,10 @@ $("resourceForm").addEventListener("submit",async e=>{
  const file=$("resFile").files[0];if(file&&(file.size>20*1024*1024||(!/\.pdf$/i.test(file.name)&&file.type!=="application/pdf")))return toast("اختر ملف PDF صالحًا لا يتجاوز 20 ميغابايت.");
  let file_url=$("resUrl").value.trim();if(file_url&&!safeUrl(file_url))return toast("أدخل رابطًا صحيحًا يبدأ بـ https://");
  const video_url=$("resVideoUrl").value.trim();if(video_url&&!safeUrl(video_url))return toast("أدخل رابط فيديو صحيحًا يبدأ بـ https://");
- const questions=[];
- for(const row of $("quizEditor").querySelectorAll(".quizEditorRow")){
-  const question=row.querySelector(".q-prompt").value.trim();if(!question)continue;
-  const rawOptions=[...row.querySelectorAll(".q-option")].map(x=>x.value.trim());
-  const correctRaw=Number(row.querySelector(".q-correct").value);
-  if(rawOptions.filter(Boolean).length<2||!rawOptions[correctRaw])return toast("أكمل خيارات كل سؤال وحدد إجابة صحيحة غير فارغة.");
-  const options=rawOptions.filter(Boolean),correctValue=rawOptions[correctRaw];
-  questions.push({question,options,correct_answer:options.indexOf(correctValue),explanation:row.querySelector(".q-explanation").value.trim()});
- }
+ const editingId=$("resId").value;
+ const editingResource=resources.find(r=>r.id===editingId);
+ const questions=editingResource&&Array.isArray(editingResource.questions)?editingResource.questions:[];
+
  if(file){
   const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,"_");
   const path=currentUser.id+"/"+crypto.randomUUID()+"-"+safeName;
@@ -710,12 +721,11 @@ $("resourceForm").addEventListener("submit",async e=>{
   const {data:publicData}=supabase.storage.from("study-pdfs").getPublicUrl(path);file_url=publicData.publicUrl;
  }
  const payload={title:$("resTitle").value.trim(),subject:$("resSubject").value.trim(),level:$("resLevel").value.trim(),stream:$("resStream").value.trim()||null,kind:$("resType").value,description:$("resDescription").value.trim(),file_url:file_url||null,video_url:video_url||null,questions};
- const editingId=$("resId").value;
  let result;
  if(editingId)result=await supabase.from("study_resources").update(payload).eq("id",editingId);
  else result=await supabase.from("study_resources").insert({...payload,created_by:currentUser.id});
  if(result.error)return toast("تعذر حفظ المورد: "+result.error.message);
- $("resourceForm").reset();$("quizEditor").innerHTML="";modal("resourceModal",false);toast(editingId?"تم تحديث المورد بنجاح.":"تمت إضافة المورد بنجاح.");await loadResources();
+ $("resourceForm").reset();modal("resourceModal",false);toast(editingId?"تم تحديث المورد بنجاح.":"تمت إضافة المورد بنجاح.");await loadResources();
 });
 $("chatForm").addEventListener("submit",e=>{e.preventDefault();askStudyAssistant("ask")});
 $("quizLessonBtn").addEventListener("click",()=>askStudyAssistant("quiz"));
