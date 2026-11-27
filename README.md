@@ -12,7 +12,17 @@
 - بوابة الطلاب لا تعرض لوحة المسؤول أو أدوات الإدارة حتى لو كان المسؤول قد سجّل الدخول من الجهاز نفسه.
 - بوابة المسؤول لا تسمح بإنشاء حساب جديد؛ تتطلب تسجيل الدخول بحساب يحمل دور `admin` في جدول `profiles`. أي حساب طالب يحاول فتحها يُعاد إلى بوابة الطلاب.
 
-في Cloudflare Pages، اربط المستودع `bouafiazakaria71-png/smart-revision-hub` بفرع `main`، واجعل مجلد ملفات النشر `/` أو `.` دون أمر بناء. يعتمد المساران `/student/` و`/admin/` على توجيه SPA الافتراضي في Cloudflare Pages؛ لا تضف ملف `404.html` في جذر النشر لأنه يعطّل هذا السلوك.
+### إعداد Cloudflare Pages الدقيق
+
+- Git repository: `bouafiazakaria71-png/smart-revision-hub`
+- Production branch: `main`
+- Framework preset: `None`
+- Build command: `exit 0`
+- Build output directory: `.`
+- Root directory: اتركه فارغاً (جذر المستودع).
+- لا تنشئ ملف `404.html` في جذر المشروع. يحتوي المستودع على Pages Function داخل `functions/api/study-assistant.js`، لذلك يجب أن يبقى مجلد `functions` في جذر المشروع وأن يكون مجلد الإخراج هو `.`.
+
+ملف `_redirects` يوجّه `/` إلى بوابة الطلاب ويخدم `/student/` و`/admin/` من ملف `index.html` مع إبقاء المسار ظاهراً في شريط العنوان.
 
 ## ربط Supabase (تم إعداد ملفات الموقع)
 
@@ -23,6 +33,18 @@
 - تم تنفيذ `supabase-schema.sql` والتحقق من ظهور الجدولين `profiles` و`study_resources`.
 
 لا تستبدل الإعدادات الحالية في `config.js` إلا عند تغيير مشروع Supabase. لا تضف مطلقًا مفتاح `Secret` أو `service_role` إلى ملفات GitHub.
+
+## ربط المساعد الذكي في Cloudflare Pages
+
+توجد دالة Pages في `functions/api/study-assistant.js` وتُستدعى من الواجهة عبر `/api/study-assistant`. كي تعمل، أضف Workers AI Binding إلى مشروع Pages:
+
+1. افتح **Workers & Pages** ثم مشروع Pages الخاص بالمنصة.
+2. افتح **Settings → Functions → Bindings**.
+3. ضمن بيئة **Production** اختر **Add → Workers AI**.
+4. اكتب **Variable name** بالقيمة الدقيقة `AI` ثم احفظ.
+5. أعد نشر المشروع بعد حفظ الربط. أضف الربط إلى **Preview** أيضاً فقط عند الحاجة لاختبار نسخ المعاينة.
+
+اسم الربط حساس: الكود يستدعي `env.AI.run(...)`، لذا لا تستخدم اسماً آخر. عند غياب الربط سترجع الدالة رسالة إعداد واضحة بدلاً من إجابة المساعد. قد يخضع استهلاك Workers AI لحدود أو رسوم الحساب؛ راجع صفحة الاستخدام والتسعير مع ولي الأمر قبل تفعيل أي استخدام مدفوع.
 
 ## تفعيل تسجيل الدخول بالبريد وGoogle
 
