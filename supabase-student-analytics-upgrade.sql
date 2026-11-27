@@ -57,6 +57,9 @@ FOR EACH ROW
 WHEN (OLD.email IS DISTINCT FROM NEW.email)
 EXECUTE FUNCTION public.sync_profile_email();
 
+-- Trigger-only function: never expose direct RPC execution to clients.
+REVOKE ALL ON FUNCTION public.sync_profile_email() FROM PUBLIC, anon, authenticated;
+
 -- يمنع المستخدم من تزوير بريد الحساب أو تغيير دوره من المتصفح.
 CREATE OR REPLACE FUNCTION public.protect_profile_role()
 RETURNS trigger
