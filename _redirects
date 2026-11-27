@@ -1,3 +1,4 @@
-# بوابة المسؤول على نفس نطاق Cloudflare Pages
-/admin /?panel=admin 302
-/admin/ /?panel=admin 302
+# بوابة الطلاب هي العنوان العام، وبوابة المسؤول مسار منفصل
+/ /student/ 302
+/admin /admin/ 301
+/student /student/ 301
