@@ -88,6 +88,7 @@ export async function onRequest({ request, env }) {
   const lessonText = typeof payload.lessonText === "string"
     ? payload.lessonText.trim().slice(0, MAX_LESSON_TEXT) : "";
   const examImageData = typeof payload.imageData === "string" ? payload.imageData : "";
+  let examImageBase64 = "";
   const examResourceInputs = Array.isArray(payload.examResources) ? payload.examResources : [];
 
   if (mode === "ask" && !message) return json({ error: "اكتب سؤالك أولاً." }, 400);
@@ -101,6 +102,7 @@ export async function onRequest({ request, env }) {
     if (imageBytes < 1000 || imageBytes > MAX_EXAM_IMAGE_BYTES) {
       return json({ error: "حجم صورة الفرض بعد الضغط غير مناسب. أعد اختيار صورة أصغر." }, 413);
     }
+    examImageBase64 = imageMatch[2];
     if (examResourceInputs.length < 1 || examResourceInputs.length > MAX_EXAM_SOURCES) {
       return json({ error: "اختر من مرجع واحد إلى خمسة مراجع من مكتبة الدروس." }, 400);
     }
@@ -140,13 +142,16 @@ export async function onRequest({ request, env }) {
       }
       const loaded = await Promise.all(examResourceInputs.map(async (input) => {
         const rows = await supabaseGet(
-          "/rest/v1/study_resources?select=id,title,subject,level,stream,description&id=eq." + encodeURIComponent(input.id) + "&limit=1",
+          "/rest/v1/study_resources?select=id,title,subject,level,stream,kind,description&id=eq." + encodeURIComponent(input.id) + "&limit=1",
           authorization
         );
         return { resource: Array.isArray(rows) ? rows[0] : null, text: input.text.trim().slice(0, 6000) };
       }));
       if (loaded.some(item => !item.resource)) {
         return json({ error: "أحد المراجع المختارة لم يعد متاحاً في مكتبة المنصة. حدّث الصفحة واختر المراجع مجدداً." }, 404);
+      }
+      if (loaded.some(item => !["درس", "ملخص"].includes(item.resource.kind))) {
+        return json({ error: "يقبل حل الفرض الدروس والملخصات فقط، وليس التمارين أو الحوليات." }, 400);
       }
       if (profile.role !== "admin") {
         const mismatch = loaded.find(item =>
@@ -279,10 +284,10 @@ export async function onRequest({ request, env }) {
 
     const aiOptions = {
       messages,
-      max_completion_tokens: mode === "solve_exam" ? 1500 : 650,
+      max_completion_tokens: mode === "solve_exam" ? 1700 : mode === "explain" ? 1400 : mode === "quiz" ? 1200 : 800,
       temperature: mode === "solve_exam" ? 0.2 : 0.5
     };
-    if (mode === "solve_exam") aiOptions.image = examImageData;
+    if (mode === "solve_exam") aiOptions.image = examImageBase64;
     const result = await env.AI.run(MODEL, aiOptions);
 
     const choiceText = result?.choices?.[0]?.message?.content;
