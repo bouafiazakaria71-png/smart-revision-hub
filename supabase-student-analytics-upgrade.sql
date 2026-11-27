@@ -5,6 +5,27 @@
 ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS level text NOT NULL DEFAULT '';
 
+-- Ensure each existing Auth account has a student profile row if it is missing.
+INSERT INTO public.profiles (id, full_name, email, stream, level)
+SELECT
+  u.id,
+  COALESCE(u.raw_user_meta_data ->> 'full_name', ''),
+  COALESCE(u.email, ''),
+  COALESCE(u.raw_user_meta_data ->> 'stream', ''),
+  COALESCE(u.raw_user_meta_data ->> 'level', '')
+FROM auth.users AS u
+LEFT JOIN public.profiles AS p ON p.id = u.id
+WHERE p.id IS NULL
+ON CONFLICT (id) DO NOTHING;
+
+-- Backfill account emails that are currently blank.
+UPDATE public.profiles AS p
+SET email = COALESCE(u.email, '')
+FROM auth.users AS u
+WHERE u.id = p.id
+  AND COALESCE(p.email, '') = ''
+  AND COALESCE(u.email, '') <> '';
+
 -- استرجاع المستوى من بيانات التسجيل السابقة إن كان موجوداً.
 UPDATE public.profiles AS p
 SET level = COALESCE(NULLIF(u.raw_user_meta_data ->> 'level', ''), '')
