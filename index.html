@@ -863,10 +863,136 @@ async function finishLessonQuiz(){
 }
 
 function renderAssistantLessons(){
- const select=$("assistantLesson");if(!select)return;
- const previous=select.value;
- select.innerHTML='<option value="">أسئلة عامة — دون اختيار درس</option>'+resources.map(r=>'<option value="'+escapeHtml(r.id)+'">'+escapeHtml([r.title,r.subject,r.level].filter(Boolean).join(" • "))+'</option>').join("");
- if(resources.some(r=>r.id===previous))select.value=previous;
+ const select=$("assistantLesson");
+ if(select){
+  const previous=select.value;
+  select.innerHTML='<option value="">أسئلة عامة — دون اختيار درس</option>'+resources.map(r=>'<option value="'+escapeHtml(r.id)+'">'+escapeHtml([r.title,r.subject,r.level].filter(Boolean).join(" • "))+'</option>').join("");
+  if(resources.some(r=>r.id===previous))select.value=previous;
+ }
+ renderExamSources();
+}
+function updateExamSourceCount(){
+ const counter=$("examSourceCount");if(!counter)return;
+ counter.textContent="المحدد: "+examSelectedSourceIds.size+" من 5 مراجع";
+}
+function renderExamSources(){
+ const list=$("examSourceList");if(!list)return;
+ const search=($("examSourceSearch")?.value||"").trim().toLowerCase();
+ if(!currentUser){
+  list.innerHTML='<p class="helpText">سجّل الدخول أولاً حتى تظهر الدروس والملخصات المناسبة لحسابك.</p>';
+  examSelectedSourceIds.clear();updateExamSourceCount();return;
+ }
+ const level=selectedLevel||currentProfile?.level||"";
+ const stream=selectedStream||currentProfile?.stream||"";
+ const eligible=resources.filter(r=>(!level||r.level===level)&&(!stream||!r.stream||r.stream===stream));
+ const eligibleIds=new Set(eligible.map(r=>r.id));
+ for(const id of examSelectedSourceIds)if(!eligibleIds.has(id))examSelectedSourceIds.delete(id);
+ const filtered=eligible.filter(r=>[r.title,r.subject,r.kind,r.description].join(" ").toLowerCase().includes(search));
+ if(!filtered.length){
+  list.innerHTML='<p class="helpText">لا توجد دروس مطابقة. اختر مستواك وشعبتك أو اطلب من المسؤول إضافة المراجع إلى المكتبة.</p>';
+  updateExamSourceCount();return;
+ }
+ list.innerHTML=filtered.map(r=>'<label class="examSourceOption"><input type="checkbox" data-exam-source="'+escapeHtml(r.id)+'" '+(examSelectedSourceIds.has(r.id)?"checked":"")+'><span><strong>'+escapeHtml(r.title||"درس دون عنوان")+'</strong><small>'+escapeHtml([r.subject,r.kind,r.level,r.stream].filter(Boolean).join(" • "))+'</small></span></label>').join("");
+ updateExamSourceCount();
+}
+function selectedExamSources(){
+ return [...examSelectedSourceIds].map(id=>resources.find(r=>r.id===id)).filter(Boolean);
+}
+async function compressExamImage(file){
+ if(!file||!/^image\/(jpeg|png|webp)$/i.test(file.type))throw new Error("اختر صورة بصيغة JPG أو PNG أو WebP.");
+ if(file.size>10*1024*1024)throw new Error("حجم الصورة الأصلية يتجاوز 10 ميغابايت.");
+ let bitmap;
+ try{
+  if(typeof createImageBitmap!=="function")throw new Error("المتصفح لا يدعم معالجة الصورة. جرّب متصفحًا حديثًا.");
+  bitmap=await createImageBitmap(file);
+  let scale=Math.min(1,1700/Math.max(bitmap.width,bitmap.height));
+  let quality=.84,blob=null;
+  for(let attempt=0;attempt<5;attempt++){
+   const canvas=document.createElement("canvas");
+   canvas.width=Math.max(1,Math.round(bitmap.width*scale));
+   canvas.height=Math.max(1,Math.round(bitmap.height*scale));
+   const context=canvas.getContext("2d",{alpha:false});
+   if(!context)throw new Error("تعذر تجهيز الصورة على هذا المتصفح.");
+   context.fillStyle="#ffffff";context.fillRect(0,0,canvas.width,canvas.height);
+   context.drawImage(bitmap,0,0,canvas.width,canvas.height);
+   blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg",quality));
+   if(!blob)throw new Error("تعذر ضغط الصورة. اختر صورة أخرى.");
+   if(blob.size<=1250*1024)break;
+   scale*=.82;quality=Math.max(.62,quality-.06);
+  }
+  if(!blob||blob.size>1450*1024)throw new Error("الصورة ما زالت كبيرة. قصّ الورقة أو التقطها من مسافة أقرب ثم أعد المحاولة.");
+  return await new Promise((resolve,reject)=>{
+   const reader=new FileReader();
+   reader.onload=()=>typeof reader.result==="string"?resolve(reader.result):reject(new Error("تعذر قراءة الصورة بعد ضغطها."));
+   reader.onerror=()=>reject(new Error("تعذرت قراءة الصورة."));
+   reader.readAsDataURL(blob);
+  });
+ }finally{if(bitmap&&typeof bitmap.close==="function")bitmap.close()}
+}
+function showExamResult(message){
+ $("examResult").classList.remove("hide");
+ $("examAnswer").textContent=message;
+}
+async function solvePhotographedExam(){
+ if(examSolveBusy)return;
+ if(!supabase||!currentUser){
+  toast("سجّل الدخول أولاً لاستخدام تصوير الفرض.");openAuth("login");return;
+ }
+ const sources=selectedExamSources();
+ if(!sources.length)return toast("اختر درساً أو ملخصاً واحداً على الأقل ليكون مرجع الحل.");
+ if(!examImageFile)return toast("التقط صورة الفرض أو ارفعها أولاً.");
+ examSolveBusy=true;
+ const button=$("solveExamBtn");button.disabled=true;
+ $("examResult").classList.add("hide");
+ $("examStatus").textContent="جارٍ تجهيز الصورة وقراءة المراجع المختارة...";
+ const controller=new AbortController();
+ const timeoutId=setTimeout(()=>controller.abort(),150000);
+ try{
+  const examResources=[];
+  const notes=[];
+  for(let i=0;i<sources.length;i++){
+   const resource=sources[i];
+   $("examStatus").textContent="جارٍ قراءة المرجع "+(i+1)+" من "+sources.length+": "+(resource.title||"درس");
+   let text=String(resource.description||"").trim();
+   if(resource.file_url){
+    try{
+     const pdf=await extractLessonPdfText(resource.file_url);
+     if(pdf.hasText)text=(text?text+"\n\n":"")+pdf.text;
+     else notes.push("لم يُستخرج نص من ملف: "+(resource.title||"درس"));
+    }catch(error){notes.push("تعذرت قراءة ملف "+(resource.title||"درس")+": "+(error?.message||"خطأ"))}
+   }
+   text=text.trim().slice(0,5200);
+   if(text.length>60)examResources.push({id:resource.id,text});
+  }
+  if(!examResources.length)throw new Error("لم أجد نصًا كافيًا في ملفات المراجع المختارة. اختر دروسًا تحتوي على نص قابل للقراءة أو أضف ملخصًا نصيًا في وصف الدرس.");
+  $("examStatus").textContent="جارٍ ضغط الصورة وإرسال الفرض والمراجع إلى الذكاء الاصطناعي...";
+  const imageData=await compressExamImage(examImageFile);
+  const {data:{session},error:sessionError}=await supabase.auth.getSession();
+  if(sessionError||!session?.access_token)throw new Error("انتهت جلسة الدخول. سجّل الدخول مجدداً.");
+  const assistantEndpoint=location.hostname.endsWith(".pages.dev")?"/api/study-assistant":SUPABASE_URL+"/functions/v1/study-assistant";
+  const headers={"Content-Type":"application/json","Authorization":"Bearer "+session.access_token};
+  if(!assistantEndpoint.startsWith("/"))headers.apikey=SUPABASE_ANON_KEY;
+  const response=await fetch(assistantEndpoint,{
+   method:"POST",headers,
+   body:JSON.stringify({mode:"solve_exam",imageData,examResources}),
+   signal:controller.signal
+  });
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(data?.error||("فشل الاتصال بالمساعد (HTTP "+response.status+")."));
+  if(typeof data.answer!=="string"||!data.answer.trim())throw new Error("لم يصل حل نصي من المساعد. حاول بصورة أوضح.");
+  let answer=data.answer.trim();
+  const references=Array.isArray(data.references)?data.references:[];
+  if(references.length)answer+="\n\nالمراجع المعتمدة:\n- "+references.join("\n- ");
+  if(notes.length)answer+="\n\nملاحظات قراءة الملفات:\n- "+notes.join("\n- ");
+  showExamResult(answer);
+  $("examStatus").textContent="اكتمل الحل. راجع الإجابات مع دروسك، خصوصًا الحسابات والرموز المكتوبة بخط اليد.";
+ }catch(error){
+  const message=error?.name==="AbortError"?"استغرق الحل وقتًا أطول من المسموح. جرّب صورة أصغر أو عددًا أقل من المراجع.":(error?.message||"حدث خطأ غير معروف.");
+  $("examStatus").textContent="تعذر حل الفرض.";
+  showExamResult(message);
+ }finally{
+  clearTimeout(timeoutId);examSolveBusy=false;button.disabled=false;
+ }
 }
 function readAssistantHistory(key){
  try{
@@ -877,6 +1003,7 @@ function readAssistantHistory(key){
 let assistantHistory=readAssistantHistory("guest");
 let assistantHistoryUserId=null;
 let assistantBusy=false;
+let examImageFile=null, examImageUrl=null, examSelectedSourceIds=new Set(), examSolveBusy=false;
 let pdfjsModule=null;
 const pdfTextCache=new Map();
 
@@ -1275,6 +1402,35 @@ $("resourceForm").addEventListener("submit",async e=>{
  if(result.error)return toast("تعذر حفظ المورد: "+result.error.message);
  $("resourceForm").reset();modal("resourceModal",false);toast(editingId?"تم تحديث المورد بنجاح.":"تمت إضافة المورد بنجاح.");await loadResources();
 });
+$("examSourceSearch").addEventListener("input",renderExamSources);
+$("examSourceList").addEventListener("change",e=>{
+ const checkbox=e.target.closest("[data-exam-source]");if(!checkbox)return;
+ const id=checkbox.dataset.examSource;
+ if(checkbox.checked){
+  if(examSelectedSourceIds.size>=5){checkbox.checked=false;toast("يمكنك اختيار خمسة مراجع فقط في الطلب الواحد.");return}
+  examSelectedSourceIds.add(id);
+ }else examSelectedSourceIds.delete(id);
+ updateExamSourceCount();
+});
+$("examImageInput").addEventListener("change",e=>{
+ const file=e.target.files?.[0];if(!file)return;
+ if(!/^image\/(jpeg|png|webp)$/i.test(file.type)||file.size>10*1024*1024){
+  e.target.value="";toast("اختر JPG أو PNG أو WebP بحجم لا يتجاوز 10 ميغابايت.");return;
+ }
+ if(examImageUrl)URL.revokeObjectURL(examImageUrl);
+ examImageFile=file;examImageUrl=URL.createObjectURL(file);
+ $("examPreview").src=examImageUrl;$("examImageName").textContent=file.name;
+ $("examPreviewWrap").classList.remove("hide");$("examStatus").textContent="تم اختيار الصورة. اختر المراجع ثم ابدأ الحل.";
+});
+function clearExamImage(){
+ examImageFile=null;
+ if(examImageUrl){URL.revokeObjectURL(examImageUrl);examImageUrl=null}
+ $("examImageInput").value="";$("examPreview").removeAttribute("src");
+ $("examImageName").textContent="";$("examPreviewWrap").classList.add("hide");
+ $("examStatus").textContent="تمت إزالة الصورة. التقط صورة جديدة أو اختر ملفًا.";
+}
+$("removeExamImageBtn").addEventListener("click",clearExamImage);
+$("solveExamBtn").addEventListener("click",solvePhotographedExam);
 $("chatForm").addEventListener("submit",e=>{e.preventDefault();askStudyAssistant("ask")});
 $("quizLessonBtn").addEventListener("click",()=>askStudyAssistant("quiz"));
 $("explainLessonBtn").addEventListener("click",()=>askStudyAssistant("explain"));
