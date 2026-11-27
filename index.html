@@ -290,6 +290,103 @@ body.admin-portal #examSolver{display:none!important}
 .examAnswer{white-space:pre-wrap;overflow-wrap:anywhere;line-height:2;font-size:14px}
 .examStatus{font-size:12px;color:var(--muted);min-height:20px}
 @media(max-width:650px){.examSourceList{grid-template-columns:1fr}.examPreviewWrap img{width:100%}.examSourcesHead{align-items:flex-start;flex-direction:column}}
+
+/* شريط تنقل ظاهر على الهاتف والحاسوب مع حركة خفيفة للشعار */
+.navlinks a{
+ padding:7px 10px;
+ border-radius:10px;
+ transition:color .2s ease,background .2s ease,transform .2s ease,border-color .2s ease;
+}
+.navlinks a:hover,.navlinks a:focus-visible{
+ color:var(--brand);
+ background:color-mix(in srgb,var(--brand) 10%,var(--panel));
+ border-color:color-mix(in srgb,var(--brand) 38%,var(--line));
+ transform:translateY(-1px);
+ outline:none;
+}
+.logo{
+ position:relative;
+ isolation:isolate;
+ animation:aliLogoGlow 4.8s ease-in-out infinite;
+}
+.logo::before{
+ content:"";
+ position:absolute;
+ inset:-4px;
+ border:1px solid color-mix(in srgb,var(--brand) 55%,transparent);
+ border-radius:inherit;
+ opacity:.5;
+ pointer-events:none;
+ animation:aliLogoRing 4.8s ease-in-out infinite;
+}
+.logo svg{
+ position:relative;
+ transform-origin:50% 50%;
+ animation:aliLogoStar 12s ease-in-out infinite;
+}
+@keyframes aliLogoGlow{
+ 0%,100%{box-shadow:0 8px 24px #46d6b233,0 0 0 0 #46d6b200}
+ 50%{box-shadow:0 10px 30px #46d6b255,0 0 0 5px #46d6b20d}
+}
+@keyframes aliLogoRing{
+ 0%,100%{opacity:.28;transform:scale(1)}
+ 50%{opacity:.8;transform:scale(1.08)}
+}
+@keyframes aliLogoStar{
+ 0%,100%{transform:rotate(0deg)}
+ 50%{transform:rotate(180deg)}
+}
+@media(max-width:850px){
+ .nav{
+  height:auto;
+  min-height:74px;
+  flex-wrap:wrap;
+  gap:8px 12px;
+  padding:8px 0 5px;
+ }
+ .brand{flex:1 1 auto;min-width:0}
+ .navlinks{
+  display:flex;
+  position:static;
+  order:3;
+  flex:0 0 100%;
+  width:100%;
+  inset:auto;
+  padding:5px 0 7px;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  flex-direction:row;
+  align-items:center;
+  justify-content:flex-start;
+  gap:8px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  white-space:nowrap;
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+ }
+ .navlinks::-webkit-scrollbar{display:none}
+ .navlinks a{
+  flex:0 0 auto;
+  padding:7px 11px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:var(--panel);
+  font-size:12px;
+ }
+ .menu{display:none!important}
+}
+@media(max-width:560px){
+ .nav{height:auto;min-height:68px;padding:7px 0 4px;gap:7px}
+ .navlinks{gap:6px;padding:4px 0 7px}
+ .navlinks a{padding:6px 10px;font-size:11px}
+ .logo{width:43px;height:43px}
+}
+@media(prefers-reduced-motion:reduce){
+ .logo,.logo::before,.logo svg{animation:none!important}
+}
+
 </style>
 </head>
 <body>
