@@ -88,7 +88,6 @@ export async function onRequest({ request, env }) {
   const lessonText = typeof payload.lessonText === "string"
     ? payload.lessonText.trim().slice(0, MAX_LESSON_TEXT) : "";
   const examImageData = typeof payload.imageData === "string" ? payload.imageData : "";
-  let examImageBase64 = "";
   const examResourceInputs = Array.isArray(payload.examResources) ? payload.examResources : [];
 
   if (mode === "ask" && !message) return json({ error: "اكتب سؤالك أولاً." }, 400);
@@ -102,7 +101,6 @@ export async function onRequest({ request, env }) {
     if (imageBytes < 1000 || imageBytes > MAX_EXAM_IMAGE_BYTES) {
       return json({ error: "حجم صورة الفرض بعد الضغط غير مناسب. أعد اختيار صورة أصغر." }, 413);
     }
-    examImageBase64 = imageMatch[2];
     if (examResourceInputs.length < 1 || examResourceInputs.length > MAX_EXAM_SOURCES) {
       return json({ error: "اختر من مرجع واحد إلى خمسة مراجع من مكتبة الدروس." }, 400);
     }
@@ -287,7 +285,7 @@ export async function onRequest({ request, env }) {
       max_completion_tokens: mode === "solve_exam" ? 1700 : mode === "explain" ? 1400 : mode === "quiz" ? 1200 : 800,
       temperature: mode === "solve_exam" ? 0.2 : 0.5
     };
-    if (mode === "solve_exam") aiOptions.image = examImageBase64;
+    if (mode === "solve_exam") aiOptions.image = examImageData;
     const result = await env.AI.run(MODEL, aiOptions);
 
     const choiceText = result?.choices?.[0]?.message?.content;
