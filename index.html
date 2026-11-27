@@ -491,6 +491,10 @@ function stopAdminAnalyticsRealtime(){
 }
 function updateAccount(user,role="student",profile=null){
  const nextUserId=user?.id||null;
+ if((currentUser?.id||null)!==nextUserId){
+  examSelectedSourceIds.clear();
+  clearExamImage();
+ }
  if(!user||role!=="admin"||(currentUser&&currentUser.id!==nextUserId)){
   resetAdminCaptchaState();
  }
