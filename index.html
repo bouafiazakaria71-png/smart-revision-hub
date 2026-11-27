@@ -390,14 +390,75 @@ function safeUrl(value){try{const u=new URL(value);return ["https:","http:"].inc
 function escapeHtml(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function setAuthMode(mode){if(isAdminPortal()&&mode==="signup")mode="login";authMode=mode;document.querySelectorAll("[data-auth-tab]").forEach(b=>b.classList.toggle("active",b.dataset.authTab===mode));$("authTitle").textContent=mode==="login"?"تسجيل الدخول":"إنشاء حساب جديد";$("authDesc").textContent=mode==="login"?"أدخل بيانات حسابك للمتابعة.":"أنشئ حسابًا شخصيًا لمتابعة رحلتك الدراسية."; $("nameWrap").classList.toggle("hide",mode!=="signup");$("levelWrap").classList.toggle("hide",mode!=="signup");$("streamWrap").classList.toggle("hide",mode!=="signup");$("fullName").required=mode==="signup";$("level").required=mode==="signup";$("stream").required=mode==="signup";$("authSubmit").textContent=mode==="login"?"دخول":"إنشاء الحساب";$("password").autocomplete=mode==="login"?"current-password":"new-password";$("forgotBtn").classList.toggle("hide",mode!=="login")}
 function openAuth(mode="login"){setAuthMode(mode);modal("authModal")}
+function ensureAdminAnalyticsRealtime(){
+ if(!supabase||!hasAdminAccess()||adminAnalyticsChannel)return;
+ adminAnalyticsChannel=supabase.channel("admin-student-analytics")
+  .on("postgres_changes",{event:"*",schema:"public",table:"profiles"},()=>scheduleAdminAnalyticsRefresh())
+  .on("postgres_changes",{event:"*",schema:"public",table:"lesson_progress"},()=>scheduleAdminAnalyticsRefresh())
+  .subscribe(status=>{
+   if(status==="CHANNEL_ERROR"||status==="TIMED_OUT")console.warn("Admin analytics realtime status:",status);
+  });
+}
+function scheduleAdminAnalyticsRefresh(){
+ if(!hasAdminAccess())return;
+ clearTimeout(adminAnalyticsTimer);
+ adminAnalyticsTimer=setTimeout(()=>{if(hasAdminAccess())loadStudents()},400);
+}
+function stopAdminAnalyticsRealtime(){
+ if(adminAnalyticsTimer){clearTimeout(adminAnalyticsTimer);adminAnalyticsTimer=null}
+ if(supabase&&adminAnalyticsChannel){supabase.removeChannel(adminAnalyticsChannel);adminAnalyticsChannel=null}
+}
 function updateAccount(user,role="student",profile=null){
  const nextUserId=user?.id||null;
  if(nextUserId!==assistantHistoryUserId){
-   assistantHistoryUserId=nextUserId;
-   assistantHistory=readAssistantHistory(nextUserId||"guest");
-  }
- currentUser=user;currentRole=role;applyPortalMode();const adminAccess=hasAdminAccess();$("loginOpen").classList.toggle("hide",!!user);$("signupOpen").classList.toggle("hide",!!user||isAdminPortal());$("logoutBtn").classList.toggle("hide",!user);$("accountAction").textContent=user?"تحديث الملف الشخصي":"تسجيل الدخول";const displayName=(profile?.full_name||user?.user_metadata?.full_name||"").trim();$("accountTitle").textContent=user?(displayName||user.email):"مساحة التلميذ";$("accountSub").textContent=user?(user.email+" • "+(adminAccess?"حساب المسؤول":"حساب تلميذ")):"سجّل الدخول لمزامنة حسابك وبياناتك.";$("avatar").textContent=user?(displayName||user.email||"م").trim().charAt(0).toUpperCase():"ز";$("adminNavLink").classList.add("hide");$("adminPanel").classList.toggle("hide",!adminAccess);const welcome=$("adminWelcome");if(welcome){welcome.classList.toggle("show",adminAccess);$("adminWelcomeTitle").textContent="مرحباً بك في بوابة المسؤول"}}
-async function loadProfile(user){let profile=null,role="student";const {data,error}=await supabase.from("profiles").select("full_name,stream,role,email").eq("id",user.id).maybeSingle();if(error)console.warn("profile",error.message);if(data){profile=data;role=data.role||"student"}updateAccount(user,role,profile);handleAdminRoute();if(hasAdminAccess())await loadStudents();await loadLessonProgress();renderResources(resources)}
+  assistantHistoryUserId=nextUserId;
+  assistantHistory=readAssistantHistory(nextUserId||"guest");
+ }
+ currentUser=user;currentRole=role;applyPortalMode();
+ const adminAccess=hasAdminAccess();
+ if(adminAccess)ensureAdminAnalyticsRealtime();else stopAdminAnalyticsRealtime();
+ $("loginOpen").classList.toggle("hide",!!user);
+ $("signupOpen").classList.toggle("hide",!!user||isAdminPortal());
+ $("logoutBtn").classList.toggle("hide",!user);
+ $("accountAction").textContent=user?"تحديث الملف الشخصي":"تسجيل الدخول";
+ const displayName=(profile?.full_name||user?.user_metadata?.full_name||"").trim();
+ $("accountTitle").textContent=user?(displayName||user.email):"مساحة التلميذ";
+ $("accountSub").textContent=user?(user.email+" • "+(adminAccess?"حساب المسؤول":"حساب تلميذ")):"سجّل الدخول لمزامنة حسابك وبياناتك.";
+ $("avatar").textContent=user?(displayName||user.email||"م").trim().charAt(0).toUpperCase():"ز";
+ $("adminNavLink").classList.add("hide");
+ $("adminPanel").classList.toggle("hide",!adminAccess);
+ const welcome=$("adminWelcome");
+ if(welcome){welcome.classList.toggle("show",adminAccess);$("adminWelcomeTitle").textContent="مرحباً بك في بوابة المسؤول"}
+}
+function syncStudyPathUI(){
+ document.querySelectorAll("[data-level]").forEach(b=>{
+  b.classList.toggle("active",b.dataset.level===selectedLevel&&b.dataset.stream===selectedStream);
+ });
+ const label=$("selectionLabel");
+ if(selectedLevel&&selectedStream){
+  label.textContent="المستوى: "+selectedLevel+" — الشعبة: "+selectedStream+". تُستخدم هذه البيانات لتصفية المكتبة وحساب تقدمك الدراسي.";
+  label.classList.remove("hide");
+ }else label.classList.add("hide");
+}
+async function persistStudentStudyPath(){
+ if(!supabase||!currentUser||currentRole!=="student")return;
+ const {error}=await supabase.from("profiles").update({level:selectedLevel,stream:selectedStream}).eq("id",currentUser.id);
+ if(error)toast("تعذر حفظ المستوى والشعبة في حسابك: "+error.message);
+}
+async function loadProfile(user){
+ let profile=null,role="student";
+ const {data,error}=await supabase.from("profiles").select("full_name,stream,level,role,email").eq("id",user.id).maybeSingle();
+ if(error)console.warn("profile",error.message);
+ if(data){
+  profile=data;role=data.role||"student";
+  if(role==="student"){selectedLevel=data.level||"";selectedStream=data.stream||"";syncStudyPathUI()}
+ }
+ updateAccount(user,role,profile);
+ handleAdminRoute();
+ if(hasAdminAccess())await loadStudents();
+ await loadLessonProgress();
+ renderResources(resources);
+}
 function handleAdminRoute(){
  applyPortalMode();
  if(!isAdminPortal()){
