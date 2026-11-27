@@ -233,6 +233,29 @@ body.admin-portal #navlinks,
 body.admin-portal #menuBtn {display:none!important}
 body.admin-portal main>#adminPanel {padding-top:24px;min-height:calc(100vh - 130px)}
 body.admin-portal .adminWelcome {width:min(1160px,calc(100% - 36px))}
+
+/* لوحة متابعة الطلاب */
+.studentAnalyticsStats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0 18px}
+.studentMetric{min-width:0;padding:15px;border:1px solid var(--line);border-radius:15px;background:linear-gradient(145deg,var(--panel2),var(--panel))}
+.studentMetric strong{display:block;font:700 25px "Space Grotesk",sans-serif;color:var(--brand);line-height:1.3}
+.studentMetric span{display:block;font-size:12px;font-weight:700;color:var(--text);margin-top:5px}
+.studentMetric small{display:block;color:var(--muted);font-size:10px;margin-top:3px}
+.studentTable{min-width:1180px}
+.studentTable .field{min-width:125px;font-size:12px;padding:8px}
+.studentEmail{direction:ltr;text-align:left;display:inline-block;max-width:230px;overflow-wrap:anywhere;font-size:12px}
+.studentProgressCell{min-width:135px}
+.studentProgressTrack{height:8px;border-radius:99px;overflow:hidden;background:var(--panel2);margin-top:6px}
+.studentProgressTrack span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--brand),var(--brand2))}
+.studentDetailsPanel{border:1px solid var(--line);border-radius:16px;background:var(--bg);padding:16px;margin-top:16px}
+.studentDetailsPanel h4{margin:0 0 6px}
+.studentDetailsPanel .studentDetailIntro{color:var(--muted);font-size:12px;margin:0 0 13px}
+.studentDetailStats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0}
+.studentDetailStat{border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--panel)}
+.studentDetailStat small{display:block;color:var(--muted);font-size:10px}
+.studentDetailStat strong{font-size:17px}
+.studentDetailsTable{min-width:850px}
+@media(max-width:760px){.studentAnalyticsStats{grid-template-columns:repeat(2,minmax(0,1fr))}.studentDetailStats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){.studentAnalyticsStats{gap:7px}.studentMetric{padding:11px}.studentMetric strong{font-size:21px}}
 </style>
 </head>
 <body>
@@ -268,8 +291,8 @@ body.admin-portal .adminWelcome {width:min(1160px,calc(100% - 36px))}
   </div>
   <div class="card">
     <div class="sectionHead"><div><h3 style="margin:0">حسابات الطلاب</h3><p>عرض الحسابات وتحديث الاسم والشعبة.</p></div><button class="btn small" id="refreshStudentsBtn" type="button">تحديث القائمة ↻</button></div>
-    <div id="studentGrid"><p class="helpText">تحميل حسابات الطلاب...</p></div>
-    <p class="notice">هذه اللوحة لا تعرض كلمات المرور ولا تحذف حسابات تسجيل الدخول أو توقفها. تلك العمليات تتطلب إجراءً خادمياً آمناً بصلاحيات خاصة.</p>
+    <div id="studentGrid"><p class="helpText">تحميل حسابات الطلاب...</p></div><div id="studentDetailsPanel" class="studentDetailsPanel hide"></div>
+    <p class="notice">تعرض هذه اللوحة البريد الإلكتروني والبيانات الدراسية وسجلات التقدم فقط. كلمات المرور لا تُعرض ولا تُقرأ ولا تُخزّن في لوحة المسؤول.</p>
   </div>
 </section>
 <section class="wrap section" id="assistant">
@@ -298,7 +321,7 @@ body.admin-portal .adminWelcome {width:min(1160px,calc(100% - 36px))}
 </main>
 <footer class="footer"><div class="wrap footerInner"><span>© <span id="year"></span> علي بن أبي طالب — منصة تعليمية لدعم التلميذ الجزائري.</span><span>التعلّم رحلة، وكل خطوة تصنع فرقًا.</span></div></footer>
 <div class="modal" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle"><div class="dialog"><div class="dialogHead"><h2 id="authTitle">مرحبًا بك</h2><button class="iconbtn" data-close="authModal" aria-label="إغلاق">✕</button></div><p id="authDesc">أنشئ حسابك أو سجّل الدخول للمتابعة.</p><div class="tabs"><button class="active" data-auth-tab="login">تسجيل الدخول</button><button data-auth-tab="signup">إنشاء حساب</button></div>
-<form class="form" id="authForm"><label id="nameWrap" class="hide">الاسم الكامل<input class="field" id="fullName" maxlength="80" autocomplete="name"></label><label>البريد الإلكتروني<input class="field" id="email" type="email" autocomplete="email" required maxlength="254"></label><label>كلمة المرور<input class="field" id="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128"></label><label id="streamWrap" class="hide">الشعبة<select class="field" id="stream"><option value="">اختر شعبتك</option><option>علوم تجريبية</option><option>رياضيات</option><option>تقني رياضي</option><option>آداب وفلسفة</option><option>تسيير واقتصاد</option><option>لغات أجنبية</option><option>علوم وتكنولوجيا</option><option>آداب</option></select></label><button class="btn primary" id="authSubmit" type="submit">دخول</button><div class="oauthDivider">أو</div><button class="btn googleBtn" id="googleAuthBtn" type="button"><span class="googleMark" aria-hidden="true">G</span> المتابعة باستخدام Google</button><button class="btn ghost small" type="button" id="forgotBtn">نسيت كلمة المرور؟</button></form></div></div>
+<form class="form" id="authForm"><label id="nameWrap" class="hide">الاسم الكامل<input class="field" id="fullName" maxlength="80" autocomplete="name"></label><label>البريد الإلكتروني<input class="field" id="email" type="email" autocomplete="email" required maxlength="254"></label><label>كلمة المرور<input class="field" id="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128"></label><label id="levelWrap" class="hide">المستوى الدراسي<select class="field" id="level"><option value="">اختر مستواك الدراسي</option><option>الأولى ثانوي</option><option>الثانية ثانوي</option><option>الثالثة ثانوي</option></select></label><label id="streamWrap" class="hide">الشعبة<select class="field" id="stream"><option value="">اختر شعبتك</option><option>علوم تجريبية</option><option>رياضيات</option><option>تقني رياضي</option><option>آداب وفلسفة</option><option>تسيير واقتصاد</option><option>لغات أجنبية</option><option>علوم وتكنولوجيا</option><option>آداب</option></select></label><button class="btn primary" id="authSubmit" type="submit">دخول</button><div class="oauthDivider">أو</div><button class="btn googleBtn" id="googleAuthBtn" type="button"><span class="googleMark" aria-hidden="true">G</span> المتابعة باستخدام Google</button><button class="btn ghost small" type="button" id="forgotBtn">نسيت كلمة المرور؟</button></form></div></div>
 <div class="modal" id="questionBankModal" role="dialog" aria-modal="true" aria-labelledby="questionBankTitle"><div class="dialog wide">
  <div class="dialogHead"><h2 id="questionBankTitle">بنك الأسئلة التدريبية</h2><button class="iconbtn" data-close="questionBankModal" aria-label="إغلاق">✕</button></div>
  <p>اختر الدرس أولاً، ثم أضف أسئلة خاصة به. سيجد الطالب هذه الأسئلة عند إتمام مراجعة الدرس.</p>
@@ -346,7 +369,7 @@ const supabase = configured ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {aut
 const $ = id => document.getElementById(id);
 let authMode="login", currentUser=null, currentRole="student", selectedLevel="", selectedStream="", resources=[];
 
-let studyQuestions=[], lessonProgress=[], activeLessonQuiz=null;
+let studyQuestions=[], lessonProgress=[], activeLessonQuiz=null, adminStudentsData=[], adminProgressData=[], adminContentData=[], adminAnalyticsChannel=null, adminAnalyticsTimer=null;
 function isAdminPortal(){
  return /^\/admin\/?$/.test(location.pathname) ||
   (location.pathname==="/" && new URLSearchParams(location.search).get("panel")==="admin");
@@ -365,7 +388,7 @@ function toast(message){const el=$("toast");el.textContent=message;el.classList.
 function modal(id,show=true){$(id).classList.toggle("show",show);if(id==="lessonQuizModal"&&!show)activeLessonQuiz=null}
 function safeUrl(value){try{const u=new URL(value);return ["https:","http:"].includes(u.protocol)?u.href:null}catch{return null}}
 function escapeHtml(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-function setAuthMode(mode){if(isAdminPortal()&&mode==="signup")mode="login";authMode=mode;document.querySelectorAll("[data-auth-tab]").forEach(b=>b.classList.toggle("active",b.dataset.authTab===mode));$("authTitle").textContent=mode==="login"?"تسجيل الدخول":"إنشاء حساب جديد";$("authDesc").textContent=mode==="login"?"أدخل بيانات حسابك للمتابعة.":"أنشئ حسابًا شخصيًا لمتابعة رحلتك الدراسية."; $("nameWrap").classList.toggle("hide",mode!=="signup");$("streamWrap").classList.toggle("hide",mode!=="signup");$("fullName").required=mode==="signup";$("authSubmit").textContent=mode==="login"?"دخول":"إنشاء الحساب";$("password").autocomplete=mode==="login"?"current-password":"new-password";$("forgotBtn").classList.toggle("hide",mode!=="login")}
+function setAuthMode(mode){if(isAdminPortal()&&mode==="signup")mode="login";authMode=mode;document.querySelectorAll("[data-auth-tab]").forEach(b=>b.classList.toggle("active",b.dataset.authTab===mode));$("authTitle").textContent=mode==="login"?"تسجيل الدخول":"إنشاء حساب جديد";$("authDesc").textContent=mode==="login"?"أدخل بيانات حسابك للمتابعة.":"أنشئ حسابًا شخصيًا لمتابعة رحلتك الدراسية."; $("nameWrap").classList.toggle("hide",mode!=="signup");$("levelWrap").classList.toggle("hide",mode!=="signup");$("streamWrap").classList.toggle("hide",mode!=="signup");$("fullName").required=mode==="signup";$("level").required=mode==="signup";$("stream").required=mode==="signup";$("authSubmit").textContent=mode==="login"?"دخول":"إنشاء الحساب";$("password").autocomplete=mode==="login"?"current-password":"new-password";$("forgotBtn").classList.toggle("hide",mode!=="login")}
 function openAuth(mode="login"){setAuthMode(mode);modal("authModal")}
 function updateAccount(user,role="student",profile=null){
  const nextUserId=user?.id||null;
