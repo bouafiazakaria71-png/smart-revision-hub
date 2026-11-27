@@ -489,7 +489,7 @@ async function loadResources(){
  if(questionResult.error){console.error(questionResult.error);studyQuestions=[];toast("تعذر تحميل بنك الأسئلة؛ تحقق من صلاحيات جدول الأسئلة.");}
  else studyQuestions=questionResult.data||[];
  await loadLessonProgress();
- renderResources(resources);renderAssistantLessons();
+ renderResources(resources);renderAssistantLessons();if(hasAdminAccess())await loadStudents();
 }
 function questionsForResource(resource){
  const legacy=(Array.isArray(resource?.questions)?resource.questions:[]).map((q,i)=>({...q,id:q.id||("legacy-"+resource.id+"-"+i)}));
@@ -909,10 +909,16 @@ $("menuBtn").addEventListener("click",()=>$("navlinks").classList.toggle("open")
 $("loginOpen").addEventListener("click",()=>openAuth("login"));$("signupOpen").addEventListener("click",()=>openAuth("signup"));$("heroStart").addEventListener("click",()=>$("levels").scrollIntoView({behavior:"smooth"}));$("accountAction").addEventListener("click",()=>openAuth("login"));$("logoutBtn").addEventListener("click",async()=>{if(!supabase)return toast("أكمل إعداد Supabase أولًا.");const {error}=await supabase.auth.signOut();if(error)toast("تعذر تسجيل الخروج: "+error.message);else toast("تم تسجيل الخروج.")});
 document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>modal(b.dataset.close,false)));document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)modal(m.id,false)}));document.addEventListener("keydown",e=>{if(e.key==="Escape")document.querySelectorAll(".modal.show").forEach(m=>modal(m.id,false))});
 document.querySelectorAll("[data-auth-tab]").forEach(b=>b.addEventListener("click",()=>setAuthMode(b.dataset.authTab)));
-$("authForm").addEventListener("submit",async e=>{e.preventDefault();if(!supabase)return toast("المصادقة غير مفعّلة بعد. أكمل خطوات إعداد Supabase في README.md.");const email=$("email").value.trim(),password=$("password").value;if(authMode==="signup"){const full_name=$("fullName").value.trim(),stream=$("stream").value;if(!full_name||!stream)return toast("أكمل الاسم والشعبة.");const {data,error}=await supabase.auth.signUp({email,password,options:{data:{full_name,stream}}});if(error)return toast("تعذر إنشاء الحساب: "+error.message);modal("authModal",false);toast(data.session?"تم إنشاء الحساب وتسجيل الدخول.":"تحقق من بريدك الإلكتروني لتأكيد الحساب.");if(data.user&&data.session)await loadProfile(data.user)}else{const {data,error}=await supabase.auth.signInWithPassword({email,password});if(error)return toast("تعذر تسجيل الدخول. تحقق من البريد وكلمة المرور.");modal("authModal",false);toast("أهلًا بعودتك!");if(data.user)await loadProfile(data.user);await loadResources()}});
+$("authForm").addEventListener("submit",async e=>{e.preventDefault();if(!supabase)return toast("المصادقة غير مفعّلة بعد. أكمل خطوات إعداد Supabase في README.md.");const email=$("email").value.trim(),password=$("password").value;if(authMode==="signup"){const full_name=$("fullName").value.trim(),level=$("level").value,stream=$("stream").value;if(!full_name||!level||!stream)return toast("أكمل الاسم والمستوى والشعبة.");const {data,error}=await supabase.auth.signUp({email,password,options:{data:{full_name,level,stream}}});if(error)return toast("تعذر إنشاء الحساب: "+error.message);modal("authModal",false);toast(data.session?"تم إنشاء الحساب وتسجيل الدخول.":"تحقق من بريدك الإلكتروني لتأكيد الحساب.");if(data.user&&data.session)await loadProfile(data.user)}else{const {data,error}=await supabase.auth.signInWithPassword({email,password});if(error)return toast("تعذر تسجيل الدخول. تحقق من البريد وكلمة المرور.");modal("authModal",false);toast("أهلًا بعودتك!");if(data.user)await loadProfile(data.user);await loadResources()}});
 $("googleAuthBtn").addEventListener("click",async()=>{if(!supabase)return toast("تسجيل Google غير مفعّل بعد. أكمل إعداد Supabase وGoogle OAuth في README.md.");const {error}=await supabase.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+location.pathname+location.search,queryParams:{prompt:"select_account"}}});if(error)toast("تعذر بدء تسجيل Google: "+error.message)});
 $("forgotBtn").addEventListener("click",async()=>{if(!supabase)return toast("أكمل إعداد Supabase أولًا.");const email=$("email").value.trim();if(!email)return toast("اكتب بريدك الإلكتروني أولًا.");const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});toast(error?"تعذر إرسال رابط الاستعادة: "+error.message:"إذا كان البريد مسجلًا، سيصلك رابط استعادة كلمة المرور.")});
-document.querySelectorAll("[data-level]").forEach(b=>b.addEventListener("click",()=>{selectedLevel=b.dataset.level;selectedStream=b.dataset.stream;document.querySelectorAll("[data-level]").forEach(x=>x.classList.toggle("active",x===b));$("selectionLabel").textContent="تم اختيار "+selectedLevel+" — "+selectedStream+". ستُستخدم هذه الخيارات لتصفية موارد المكتبة."; $("selectionLabel").classList.remove("hide");$("library").scrollIntoView({behavior:"smooth"});renderResources(resources)}));
+document.querySelectorAll("[data-level]").forEach(b=>b.addEventListener("click",async()=>{
+ selectedLevel=b.dataset.level;selectedStream=b.dataset.stream;
+ syncStudyPathUI();
+ $("library").scrollIntoView({behavior:"smooth"});
+ renderResources(resources);
+ await persistStudentStudyPath();
+}));
 $("searchInput").addEventListener("input",()=>renderResources(resources));$("typeFilter").addEventListener("change",()=>renderResources(resources));
 $("addLessonResourceBtn").addEventListener("click",()=>openResourceEditor(null,"درس"));
  $("addPastPaperBtn").addEventListener("click",()=>openResourceEditor(null,"حولية"));
@@ -958,14 +964,21 @@ $("resourceGrid").addEventListener("click",async e=>{
 });
 $("refreshStudentsBtn").addEventListener("click",loadStudents);
 $("studentGrid").addEventListener("click",async e=>{
+ const details=e.target.closest("[data-view-student]");
+ if(details){renderStudentDetails(details.dataset.viewStudent);return}
  const btn=e.target.closest("[data-save-student]");if(!btn)return;
  if(!hasAdminAccess())return toast("غير مصرح.");
  const row=btn.closest("[data-student-row]"),id=row.dataset.studentRow;
- const full_name=row.querySelector(".student-name").value.trim(),stream=row.querySelector(".student-stream").value.trim();
+ const full_name=row.querySelector(".student-name").value.trim();
+ const stream=row.querySelector(".student-stream").value.trim();
+ const level=row.querySelector(".student-level").value;
  if(!full_name)return toast("اكتب اسم الطالب.");
- const {error}=await supabase.from("profiles").update({full_name,stream}).eq("id",id);
+ const {error}=await supabase.from("profiles").update({full_name,stream,level}).eq("id",id);
  if(error)return toast("تعذر تحديث بيانات الطالب: "+error.message);
  toast("تم تحديث بيانات الطالب.");await loadStudents();
+});
+$("studentDetailsPanel").addEventListener("click",e=>{
+ if(e.target.closest("[data-close-student-details]"))$("studentDetailsPanel").classList.add("hide");
 });
 $("resourceForm").addEventListener("submit",async e=>{
  e.preventDefault();if(!supabase||!hasAdminAccess()||!currentUser)return toast("يلزم فتح بوابة المسؤول بحساب مسؤول موثّق.");
