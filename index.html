@@ -889,7 +889,11 @@ function renderExamSources(){
  }
  const level=selectedLevel||currentProfile?.level||"";
  const stream=selectedStream||currentProfile?.stream||"";
- const eligible=resources.filter(r=>(!level||r.level===level)&&(!stream||!r.stream||r.stream===stream));
+ if(!level||!stream){
+  list.innerHTML='<p class="helpText">حدد المستوى والشعبة من قسم «اختر مستواك وشعبتك» أولاً حتى تظهر لك مراجع مسارك الدراسي فقط.</p>';
+  examSelectedSourceIds.clear();updateExamSourceCount();return;
+ }
+ const eligible=resources.filter(r=>(r.kind==="درس"||r.kind==="ملخص")&&r.level===level&&(!r.stream||r.stream===stream));
  const eligibleIds=new Set(eligible.map(r=>r.id));
  for(const id of examSelectedSourceIds)if(!eligibleIds.has(id))examSelectedSourceIds.delete(id);
  const filtered=eligible.filter(r=>[r.title,r.subject,r.kind,r.description].join(" ").toLowerCase().includes(search));
@@ -1039,14 +1043,14 @@ async function extractLessonPdfText(fileUrl){
   }
   const pdf=await pdfjsModule.getDocument({data:new Uint8Array(bytes),isEvalSupported:false}).promise;
   const pieces=[];let total=0;
-  for(let pageNo=1;pageNo<=Math.min(pdf.numPages,12)&&total<7000;pageNo++){
+  for(let pageNo=1;pageNo<=Math.min(pdf.numPages,18)&&total<14000;pageNo++){
    const page=await pdf.getPage(pageNo);
    const content=await page.getTextContent();
    const line=content.items.map(x=>x&&typeof x.str==="string"?x.str:"").filter(Boolean).join(" ");
    if(line){pieces.push("[الصفحة "+pageNo+"] "+line);total+=line.length;}
    page.cleanup();
   }
-  const text=pieces.join("\n").slice(0,7000).trim();
+  const text=pieces.join("\n").slice(0,14000).trim();
   return {text,pages:pdf.numPages,hasText:text.length>60};
  })();
  pdfTextCache.set(fileUrl,task);
@@ -1087,7 +1091,7 @@ async function askStudyAssistant(mode="ask",messageOverride=null){
     const pdf=await extractLessonPdfText(selected.file_url);
     lessonText=pdf.text;
     if(!pdf.hasText)pdfNotice="لم أستطع استخراج نص قابل للقراءة من ملف PDF؛ قد يكون ممسوحاً كصور.";
-    else if(pdf.pages>12)pdfNotice="تمت قراءة أول 12 صفحة فقط من الملف.";
+    else if(pdf.pages>18)pdfNotice="تمت قراءة أول 18 صفحة فقط من الملف.";
    }catch(error){
     pdfNotice="تعذرت قراءة PDF: "+(error?.message||"خطأ غير معروف");
    }
