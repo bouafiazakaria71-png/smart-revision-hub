@@ -462,6 +462,7 @@ function resetAdminCaptchaState(){
   adminCaptchaVerified=false;adminCaptchaUserId=null;adminCaptchaExpiresAt=0;adminCaptchaToken="";
   if(adminCaptchaTimer){clearTimeout(adminCaptchaTimer);adminCaptchaTimer=null}
   const verifyButton=$("adminCaptchaVerifyBtn");if(verifyButton)verifyButton.disabled=true;
+  if(window.turnstile&&adminCaptchaWidgetId!==null){try{window.turnstile.reset(adminCaptchaWidgetId)}catch{}}
 }
 function loadTurnstileApi(){
   if(window.turnstile?.render)return Promise.resolve(window.turnstile);
