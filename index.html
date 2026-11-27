@@ -382,13 +382,15 @@ async function askStudyAssistant(mode="ask",messageOverride=null){
   waiting.textContent="جارٍ انتظار إجابة المساعد...";
   const {data:{session},error:sessionError}=await supabase.auth.getSession();
   if(sessionError||!session?.access_token)throw new Error("انتهت جلسة الدخول. سجّل الدخول مجدداً.");
-  const response=await fetch(SUPABASE_URL+"/functions/v1/study-assistant",{
+  const assistantEndpoint=location.hostname.endsWith(".pages.dev")?"/api/study-assistant":SUPABASE_URL+"/functions/v1/study-assistant";
+  const assistantHeaders={
+   "Content-Type":"application/json",
+   "Authorization":"Bearer "+session.access_token
+  };
+  if(!assistantEndpoint.startsWith("/"))assistantHeaders.apikey=SUPABASE_ANON_KEY;
+  const response=await fetch(assistantEndpoint,{
    method:"POST",
-   headers:{
-    "Content-Type":"application/json",
-    "apikey":SUPABASE_ANON_KEY,
-    "Authorization":"Bearer "+session.access_token
-   },
+   headers:assistantHeaders,
    body:JSON.stringify({
     message:(mode==="ask")?question:"",
     mode,
