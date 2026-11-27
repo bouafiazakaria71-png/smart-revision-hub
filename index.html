@@ -621,14 +621,32 @@ function handleAdminRoute(){
 }
 async function loadResources(){
  if(!supabase){resources=[];studyQuestions=[];await loadLessonProgress();renderResources([]);return}
- const {data,error}=await supabase.from("study_resources").select("id,title,subject,level,stream,kind,description,file_url,video_url,questions,created_at").order("created_at",{ascending:false}).limit(100);
- if(error){console.error(error);toast("تعذر تحميل المكتبة. تحقق من إعدادات الوصول.");resources=[];renderResources([]);renderAssistantLessons();return}
- resources=data||[];
- const questionResult=await supabase.from("study_questions").select("id,resource_id,question,options,correct_answer,explanation,sort_order,created_at").order("sort_order",{ascending:true}).order("created_at",{ascending:true}).limit(1000);
- if(questionResult.error){console.error(questionResult.error);studyQuestions=[];toast("تعذر تحميل بنك الأسئلة؛ تحقق من صلاحيات جدول الأسئلة.");}
- else studyQuestions=questionResult.data||[];
+ const resourceResult=await readAllPages(
+  ()=>supabase.from("study_resources")
+    .select("id,title,subject,level,stream,kind,description,file_url,video_url,questions,created_at")
+    .order("created_at",{ascending:false}).order("id",{ascending:true}),
+  500
+ );
+ if(resourceResult.error){
+  console.error("study resources",resourceResult.error);
+  toast("تعذر تحميل المكتبة. تحقق من إعدادات الوصول.");
+  resources=[];renderResources([]);renderAssistantLessons();return;
+ }
+ resources=resourceResult.data||[];
+ const questionResult=await readAllPages(
+  ()=>supabase.from("study_questions")
+    .select("id,resource_id,question,options,correct_answer,explanation,sort_order,created_at")
+    .order("sort_order",{ascending:true}).order("created_at",{ascending:true}).order("id",{ascending:true}),
+  500
+ );
+ if(questionResult.error){
+  console.error("study questions",questionResult.error);
+  studyQuestions=[];
+  toast("تعذر تحميل بنك الأسئلة؛ تحقق من صلاحيات جدول الأسئلة.");
+ }else studyQuestions=questionResult.data||[];
  await loadLessonProgress();
- renderResources(resources);renderAssistantLessons();if(hasAdminAccess())await loadStudents();
+ renderResources(resources);renderAssistantLessons();
+ if(hasAdminAccess())await loadStudents();
 }
 function questionsForResource(resource){
  const legacy=(Array.isArray(resource?.questions)?resource.questions:[]).map((q,i)=>({...q,id:q.id||("legacy-"+resource.id+"-"+i)}));
@@ -1017,9 +1035,24 @@ async function loadStudents(){
  ensureAdminAnalyticsRealtime();
  $("studentGrid").innerHTML='<p class="helpText">تحميل بيانات الطلاب والتقدم الدراسي...</p>';
  const [profilesResult,progressResult,contentResult]=await Promise.all([
-  supabase.from("profiles").select("id,email,full_name,stream,level,created_at,role").eq("role","student").order("created_at",{ascending:false}).limit(500),
-  supabase.from("lesson_progress").select("user_id,resource_id,reviewed_at,attempt_count,last_score,best_score,updated_at").limit(10000),
-  supabase.from("study_resources").select("id,title,subject,level,stream,kind").order("created_at",{ascending:false}).limit(1000)
+  readAllPages(
+   ()=>supabase.from("profiles")
+    .select("id,email,full_name,stream,level,created_at,role")
+    .eq("role","student").order("created_at",{ascending:false}).order("id",{ascending:true}),
+   500
+  ),
+  readAllPages(
+   ()=>supabase.from("lesson_progress")
+    .select("user_id,resource_id,reviewed_at,attempt_count,last_score,best_score,updated_at")
+    .order("user_id",{ascending:true}).order("resource_id",{ascending:true}),
+   500
+  ),
+  readAllPages(
+   ()=>supabase.from("study_resources")
+    .select("id,title,subject,level,stream,kind")
+    .order("created_at",{ascending:false}).order("id",{ascending:true}),
+   500
+  )
  ]);
  if(profilesResult.error){
   console.error("student profiles",profilesResult.error);
