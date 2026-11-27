@@ -136,7 +136,7 @@ body{background:radial-gradient(ellipse at 78% -8%,#24517b55,transparent 42%),ra
 </div></header>
 <main>
 <section class="wrap adminWelcome" id="adminWelcome" aria-live="polite"><div class="welcomeIcon">✦</div><div><strong id="adminWelcomeTitle">مرحباً بك في حساب المسؤول زكريا</strong><span>لوحة التحكم وإدارة المحتوى أصبحت متاحة لك.</span></div></section>
-<section class="wrap hero" id="home"><div><span class="eyebrow">✦ تعلّم بذكاء، وتقدّم بثقة</span><h1>طريقك إلى التفوق يبدأ من <span class="gradient">هنا.</span></h1><p>منصة مراجعة منظمة لتلاميذ التعليم الثانوي في الجزائر، تجمع الدروس والملخصات والتمارين في تجربة بسيطة وسريعة.</p><div class="heroBtns"><button class="btn primary" id="heroStart">ابدأ المراجعة <span>←</span></button><a class="btn" href="#library">استكشف المكتبة</a></div><div class="notice hide" id="configNotice">يعمل الموقع بوضع العرض حاليًا. لتفعيل الحسابات والحفظ السحابي، أكمل إعداد Supabase كما هو موضح في ملف README.</div></div><div class="heroArt" role="img" aria-label="رسم تعليمي لكتاب مفتوح ومصباح أفكار وأدوات دراسة">
+<section class="wrap hero" id="home"><div><span class="eyebrow">✦ تعلّم بذكاء، وتقدّم بثقة</span><h1>طريقك إلى التفوق يبدأ من <span class="gradient">هنا.</span></h1><p>منصة مراجعة منظمة لتلاميذ التعليم الثانوي في الجزائر، تجمع الدروس والتمارين والحوليات في تجربة بسيطة وسريعة.</p><div class="heroBtns"><button class="btn primary" id="heroStart">ابدأ المراجعة <span>←</span></button><a class="btn" href="#library">استكشف المكتبة</a></div><div class="notice hide" id="configNotice">يعمل الموقع بوضع العرض حاليًا. لتفعيل الحسابات والحفظ السحابي، أكمل إعداد Supabase كما هو موضح في ملف README.</div></div><div class="heroArt" role="img" aria-label="رسم تعليمي لكتاب مفتوح ومصباح أفكار وأدوات دراسة">
   <div class="heroGlow"></div>
   <div class="learningArt">
     <div class="artBadge artBadgeTop">✦ تعلّم بذكاء</div>
@@ -355,8 +355,7 @@ async function askStudyAssistant(mode="ask",messageOverride=null){
  const question=messageOverride!==null?messageOverride:input.value.trim();
  if(mode==="ask"&&!question){toast("اكتب سؤالك أولاً.");input.focus();return;}
  let display=question;
- if(mode==="summarize")display="لخّص لي درس: "+selected.title;
- else if(mode==="quiz")display="اختبر فهمي في درس: "+selected.title;
+ if(mode==="quiz")display="اختبر فهمي في درس: "+selected.title;
  else if(mode==="explain")display="اشرح لي درس: "+selected.title+" بطريقة مبسطة خطوة بخطوة.";
  addAssistantBubble("user",display);
  const waiting=addAssistantBubble("bot","جارٍ إرسال سؤالك إلى المساعد الذكي...","waiting");
