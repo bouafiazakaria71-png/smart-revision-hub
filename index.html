@@ -300,7 +300,7 @@ async function askStudyAssistant(mode="ask",messageOverride=null){
  if(messageOverride===null)input.value="";
  try{
    const {data,error}=await supabase.functions.invoke("study-assistant",{body:{
-     message:mode==="ask"?question:"",
+     message:(mode==="ask"||mode==="explain")?display:"",
      mode:mode==="explain"?"ask":mode,
      resourceId:selectedId||null,
      history:assistantHistory.slice(-8)
