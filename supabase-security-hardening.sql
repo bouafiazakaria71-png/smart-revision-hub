@@ -1,8 +1,8 @@
 -- Supabase security hardening for the existing Ali Bin Abi Talib learning platform.
 -- Run after supabase-schema.sql, supabase-lesson-quiz-upgrade.sql,
 -- and supabase-student-analytics-upgrade.sql.
--- Admin access is denied by RLS until the signed-in administrator reaches aal2
--- after verifying a TOTP factor in the site admin portal.
+-- Admin authorization relies on the protected profiles.role value.
+-- The admin portal additionally verifies Cloudflare Turnstile server-side to deter automated access.
 
 BEGIN;
 
@@ -22,8 +22,7 @@ AS $$
     FROM public.profiles AS p
     WHERE p.id = (SELECT auth.uid())
       AND p.role = 'admin'
-  )
-  AND COALESCE((SELECT auth.jwt()) ->> 'aal', 'aal1') = 'aal2';
+  );
 $$;
 ALTER FUNCTION private.is_admin() OWNER TO postgres;
 REVOKE ALL ON FUNCTION private.is_admin() FROM PUBLIC, anon;
