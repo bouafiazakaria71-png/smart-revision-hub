@@ -454,8 +454,9 @@ function isAdminPortal(){
   (location.pathname==="/" && new URLSearchParams(location.search).get("panel")==="admin");
 }
 let adminCaptchaVerified=false, adminCaptchaUserId=null, adminCaptchaExpiresAt=0, adminCaptchaTimer=null, adminCaptchaWidgetId=null, adminCaptchaToken="", turnstileApiPromise=null, currentProfile=null;
+const ADMIN_CAPTCHA_ENABLED=false; // أعدها إلى true بعد ضبط مفاتيح Cloudflare Turnstile.
 const ADMIN_CAPTCHA_TTL_MS=20*60*1000;
-function hasAdminAccess(){return isAdminPortal() && !!currentUser && currentRole==="admin" && adminCaptchaVerified && adminCaptchaUserId===currentUser.id && Date.now()<adminCaptchaExpiresAt}
+function hasAdminAccess(){return isAdminPortal() && !!currentUser && currentRole==="admin" && (!ADMIN_CAPTCHA_ENABLED || (adminCaptchaVerified && adminCaptchaUserId===currentUser.id && Date.now()<adminCaptchaExpiresAt))}
 function applyPortalMode(){
  const adminPortal=isAdminPortal();
  document.body.classList.toggle("admin-portal",adminPortal);
@@ -511,7 +512,7 @@ function updateAccount(user,role="student",profile=null){
  $("accountAction").textContent=user?"تحديث الملف الشخصي":"تسجيل الدخول";
  const displayName=(profile?.full_name||user?.user_metadata?.full_name||"").trim();
  $("accountTitle").textContent=user?(displayName||user.email):"مساحة التلميذ";
- $("accountSub").textContent=user?(user.email+" • "+(isAdminPortal()?(adminAccess?"مسؤول — تم التحقق":"بانتظار اختبار CAPTCHA"):"تم تسجيل الدخول")):"سجّل الدخول لمزامنة حسابك وبياناتك.";
+ $("accountSub").textContent=user?(user.email+" • "+(isAdminPortal()?(adminAccess?(ADMIN_CAPTCHA_ENABLED?"مسؤول — تم التحقق":"مسؤول — تسجيل الدخول ناجح"):"بانتظار اختبار CAPTCHA"):"تم تسجيل الدخول")):"سجّل الدخول لمزامنة حسابك وبياناتك.";
  $("avatar").textContent=user?(displayName||user.email||"م").trim().charAt(0).toUpperCase():"ز";
  $("adminNavLink").classList.add("hide");
  $("adminPanel").classList.toggle("hide",!adminAccess);
@@ -665,7 +666,7 @@ async function loadProfile(user){
  if(error)console.warn("profile",error.message);
  if(data){profile=data;role=data.role||"student"}
  currentUser=user;currentRole=role;currentProfile=profile;
- if(isAdminPortal()&&role==="admin"){
+ if(isAdminPortal()&&role==="admin"&&ADMIN_CAPTCHA_ENABLED){
   await prepareAdminCaptcha();
  }else{
   resetAdminCaptchaState();
@@ -1329,7 +1330,7 @@ $("addLessonResourceBtn").addEventListener("click",()=>openResourceEditor(null,"
  $("questionResourceSelect").addEventListener("change",renderQuestionBankExisting);
  $("questionBankForm").addEventListener("submit",async e=>{
   e.preventDefault();
-  if(!hasAdminAccess()||!currentUser)return toast("يلزم فتح بوابة المسؤول واجتياز اختبار CAPTCHA.");
+  if(!hasAdminAccess()||!currentUser)return toast("يلزم تسجيل الدخول بحساب المسؤول المعتمد.");
   const resourceId=$("questionResourceSelect").value;
   if(!resourceId)return toast("اختر الدرس الذي تريد إضافة السؤال إليه.");
   const question=$("bankQuestionText").value.trim();
@@ -1384,7 +1385,7 @@ $("studentDetailsPanel").addEventListener("click",e=>{
  if(e.target.closest("[data-close-student-details]"))$("studentDetailsPanel").classList.add("hide");
 });
 $("resourceForm").addEventListener("submit",async e=>{
- e.preventDefault();if(!supabase||!hasAdminAccess()||!currentUser)return toast("يلزم فتح بوابة المسؤول واجتياز اختبار CAPTCHA.");
+ e.preventDefault();if(!supabase||!hasAdminAccess()||!currentUser)return toast("يلزم تسجيل الدخول بحساب المسؤول المعتمد.");
  const file=$("resFile").files[0];if(file&&(file.size>20*1024*1024||(!/\.pdf$/i.test(file.name)&&file.type!=="application/pdf")))return toast("اختر ملف PDF صالحًا لا يتجاوز 20 ميغابايت.");
  let file_url=$("resUrl").value.trim();if(file_url&&!safeUrl(file_url))return toast("أدخل رابطًا صحيحًا يبدأ بـ https://");
  const video_url=$("resVideoUrl").value.trim();if(video_url&&!safeUrl(video_url))return toast("أدخل رابط فيديو صحيحًا يبدأ بـ https://");
