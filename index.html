@@ -508,7 +508,6 @@ async function prepareAdminMfa(){
  }catch(error){
   console.error("admin MFA status",error);
   showAdminMfaArea("adminMfaStartArea","تعذر التحقق من إعداد المصادقة الثنائية. لا يمكن فتح لوحة المسؤول قبل نجاح فحص الحماية. أعد تحميل الصفحة أو سجّل الدخول مجدداً.");
-  $("adminMfaStartBtn").disabled=true;
   return false;
  }
 }
@@ -583,8 +582,7 @@ async function loadProfile(user){
  }
  updateAccount(user,role,profile);
  handleAdminRoute();
- if(!hasAdminAccess())return;
- await loadStudents();
+ if(hasAdminAccess())await loadStudents();
  await loadLessonProgress();
  renderResources(resources);
 }
