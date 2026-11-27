@@ -346,8 +346,24 @@ function updateAccount(user,role="student",profile=null){
    assistantHistory=readAssistantHistory(nextUserId||"guest");
   }
  currentUser=user;currentRole=role;$("loginOpen").classList.toggle("hide",!!user);$("signupOpen").classList.toggle("hide",!!user);$("logoutBtn").classList.toggle("hide",!user);$("accountAction").textContent=user?"تحديث الملف الشخصي":"تسجيل الدخول";const displayName=(profile?.full_name||user?.user_metadata?.full_name||"").trim();$("accountTitle").textContent=user?(displayName||user.email):"مساحة التلميذ";$("accountSub").textContent=user?(user.email+" • "+(role==="admin"?"مسؤول المنصة":"حساب تلميذ")):"سجّل الدخول لمزامنة حسابك وبياناتك.";$("avatar").textContent=user?(displayName||user.email||"م").trim().charAt(0).toUpperCase():"ز";$("adminNavLink").classList.toggle("hide",role!=="admin"||!user);$("adminPanel").classList.toggle("hide",role!=="admin"||!user);const welcome=$("adminWelcome");if(welcome){welcome.classList.toggle("show",!!user&&role==="admin");$("adminWelcomeTitle").textContent="مرحباً بك في حساب المسؤول زكريا"}}
-async function loadProfile(user){let profile=null,role="student";const {data,error}=await supabase.from("profiles").select("full_name,stream,role,email").eq("id",user.id).maybeSingle();if(error)console.warn("profile",error.message);if(data){profile=data;role=data.role||"student"}updateAccount(user,role,profile);if(role==="admin")await loadStudents()}
-async function loadResources(){if(!supabase){renderResources([]);return}const {data,error}=await supabase.from("study_resources").select("id,title,subject,level,stream,kind,description,file_url,video_url,questions,created_at").order("created_at",{ascending:false}).limit(100);if(error){console.error(error);toast("تعذر تحميل المكتبة. تحقق من تحديث قاعدة البيانات وسياسات الوصول.");resources=[];renderResources([]);renderAssistantLessons();return}resources=data||[];renderResources(resources);renderAssistantLessons()}
+async function loadProfile(user){let profile=null,role="student";const {data,error}=await supabase.from("profiles").select("full_name,stream,role,email").eq("id",user.id).maybeSingle();if(error)console.warn("profile",error.message);if(data){profile=data;role=data.role||"student"}updateAccount(user,role,profile);if(role==="admin")await loadStudents();await loadLessonProgress();renderResources(resources)}
+async function loadResources(){
+ if(!supabase){resources=[];studyQuestions=[];await loadLessonProgress();renderResources([]);return}
+ const {data,error}=await supabase.from("study_resources").select("id,title,subject,level,stream,kind,description,file_url,video_url,questions,created_at").order("created_at",{ascending:false}).limit(100);
+ if(error){console.error(error);toast("تعذر تحميل المكتبة. تحقق من إعدادات الوصول.");resources=[];renderResources([]);renderAssistantLessons();return}
+ resources=data||[];
+ const questionResult=await supabase.from("study_questions").select("id,resource_id,question,options,correct_answer,explanation,sort_order,created_at").order("sort_order",{ascending:true}).order("created_at",{ascending:true}).limit(1000);
+ if(questionResult.error){console.error(questionResult.error);studyQuestions=[];toast("تعذر تحميل بنك الأسئلة؛ تحقق من صلاحيات جدول الأسئلة.");}
+ else studyQuestions=questionResult.data||[];
+ await loadLessonProgress();
+ renderResources(resources);renderAssistantLessons();
+}
+function questionsForResource(resource){
+ const legacy=(Array.isArray(resource?.questions)?resource.questions:[]).map((q,i)=>({...q,id:q.id||("legacy-"+resource.id+"-"+i)}));
+ const managed=studyQuestions.filter(q=>q.resource_id===resource?.id);
+ return [...legacy,...managed].filter(q=>q&&typeof q.question==="string"&&Array.isArray(q.options)&&q.options.length>=2);
+}
+function getLessonProgress(resourceId){return lessonProgress.find(x=>x.resource_id===resourceId)||null}
 function renderResources(items){
  const q=$("searchInput").value.trim().toLowerCase(),type=$("typeFilter").value;
  const filtered=items.filter(r=>(!type||r.kind===type)&&(!selectedLevel||r.level===selectedLevel)&&(!selectedStream||!r.stream||r.stream===selectedStream)&&(!q||[r.title,r.subject,r.description,r.level,r.stream].join(" ").toLowerCase().includes(q)));
@@ -355,17 +371,108 @@ function renderResources(items){
  if(!filtered.length){grid.innerHTML='<div class="empty">لا توجد موارد مطابقة حاليًا. جرّب تغيير البحث أو اختيار مستوى آخر.</div>';return}
  grid.innerHTML=filtered.map(r=>{
   const pdf=safeUrl(r.file_url||""),video=safeUrl(r.video_url||"");
-  const questions=Array.isArray(r.questions)?r.questions:[];
-  const quiz=questions.length?'<details class="quizBox"><summary>اختبر فهمك — '+questions.length+' سؤال</summary>'+questions.map((item,i)=>{
-   const opts=Array.isArray(item.options)?item.options:[];
-   return '<div class="quizItem"><strong>'+(i+1)+'. '+escapeHtml(item.question||"")+'</strong><div class="quizOptions">'+opts.map((op,j)=>'<label><input type="radio" name="quiz-'+escapeHtml(r.id)+'-'+i+'" value="'+j+'"> '+escapeHtml(op)+'</label>').join("")+'</div><div class="quizFeedback" id="quiz-feedback-'+escapeHtml(r.id)+'-'+i+'"></div></div>';
-  }).join("")+'<button class="btn small primary" type="button" data-check-quiz="'+escapeHtml(r.id)+'">تصحيح الإجابات</button></details>':'';
+  const questions=questionsForResource(r);
+  const progress=getLessonProgress(r.id),reviewed=!!progress?.reviewed_at;
   const adminButtons=currentRole==="admin"?'<div class="resourceActions"><button class="btn small" type="button" data-edit-resource="'+escapeHtml(r.id)+'">تعديل</button><button class="btn small" type="button" data-delete-resource="'+escapeHtml(r.id)+'">حذف</button></div>':'';
-  const aiButtons='<div class="resourceActions"><button class="btn small" type="button" data-ai-select="'+escapeHtml(r.id)+'">اسأل عن المحتوى</button><button class="btn small" type="button" data-ai-quiz="'+escapeHtml(r.id)+'">اختبار المحتوى</button></div>';
-  const links=(pdf?'<a class="btn small" href="'+escapeHtml(pdf)+'" target="_blank" rel="noopener noreferrer">فتح PDF ↗</a>':'')+(video?'<a class="btn small" href="'+escapeHtml(video)+'" target="_blank" rel="noopener noreferrer">مشاهدة الشرح ▶</a>':'');
-  return '<article class="card resource"><div class="resourceTop"><span class="tag">'+escapeHtml(r.kind||"مورد")+'</span><span style="color:var(--muted);font-size:11px">'+escapeHtml(r.level||"")+(r.stream?' • '+escapeHtml(r.stream):'')+'</span></div><h3>'+escapeHtml(r.title)+'</h3><p>'+escapeHtml(r.subject||"")+' • '+escapeHtml(r.description||"لا يوجد وصف إضافي.")+'</p>'+(links?'<div class="resourceLinks">'+links+'</div>':'<span class="tag">محتوى نصي</span>')+quiz+aiButtons+adminButtons+'</article>';
+  const aiButtons='<div class="resourceActions"><button class="btn small" type="button" data-ai-select="'+escapeHtml(r.id)+'">اسأل عن المحتوى</button><button class="btn small" type="button" data-ai-quiz="'+escapeHtml(r.id)+'">اختبار ذكي</button></div>';
+  const links=(pdf?'<a class="btn small" href="'+escapeHtml(pdf)+'" target="_blank" rel="noopener noreferrer">افتح الدرس للمراجعة ↗</a>':'')+(video?'<a class="btn small" href="'+escapeHtml(video)+'" target="_blank" rel="noopener noreferrer">شاهد الشرح ▶</a>':'');
+  const journey=r.kind==="حولية"?'':('<div class="lessonJourney"><div class="lessonJourneyHead"><span class="lessonJourneyTitle">مسار التعلّم لهذا الدرس</span>'+(reviewed?'<span class="lessonDoneMark">✓ أتممت المراجعة</span>':'<span class="tag">الخطوة 1: مراجعة الدرس</span>')+'</div><p class="lessonJourneyHint">'+(reviewed?'أحسنت! انتقل الآن إلى اختبار قصير لقياس فهمك.':'افتح ملف الدرس أو شاهد الشرح، ثم اضغط «أتممت المراجعة» للانتقال إلى الاختبار.')+'</p><div class="resourceActions">'+(reviewed?'<button class="btn small" type="button" data-mark-reviewed="'+escapeHtml(r.id)+'">تحديث حالة المراجعة</button>':'<button class="btn small primary" type="button" data-mark-reviewed="'+escapeHtml(r.id)+'">✓ أتممت المراجعة</button>')+(reviewed?(questions.length?'<button class="btn small primary" type="button" data-start-lesson-quiz="'+escapeHtml(r.id)+'">اختبرني في هذا الدرس · '+questions.length+' سؤال</button>':'<span class="helpText">لم تُضف أسئلة لهذا الدرس بعد. ستظهر هنا عند إضافتها من بنك الأسئلة.</span>'):'')+'</div>'+(reviewed&&progress?.best_score!==null&&progress?.best_score!==undefined?'<span class="helpText">أفضل نتيجة سابقة: '+Number(progress.best_score)+'% · المحاولات: '+Number(progress.attempt_count||0)+'</span>':'')+'</div>');
+  return '<article class="card resource"><div class="resourceTop"><span class="tag">'+escapeHtml(r.kind||"مورد")+'</span><span style="color:var(--muted);font-size:11px">'+escapeHtml(r.level||"")+(r.stream?' • '+escapeHtml(r.stream):'')+'</span></div><h3>'+escapeHtml(r.title)+'</h3><p>'+escapeHtml(r.subject||"")+' • '+escapeHtml(r.description||"لا يوجد وصف إضافي.")+'</p>'+(links?'<div class="resourceLinks">'+links+'</div>':'<span class="tag">محتوى نصي</span>')+journey+aiButtons+adminButtons+'</article>';
  }).join("");
 }
+function progressStorageKey(){return "ali-learning-progress:"+((currentUser?.id)||"guest")}
+function readLocalProgress(){
+ try{const data=JSON.parse(localStorage.getItem(progressStorageKey())||"[]");return Array.isArray(data)?data.filter(x=>x&&typeof x.resource_id==="string"):[]}catch{return []}
+}
+function writeLocalProgress(rows){try{localStorage.setItem(progressStorageKey(),JSON.stringify(rows))}catch(error){console.warn("local progress storage",error)}}
+async function loadLessonProgress(){
+ const localRows=readLocalProgress();
+ if(!supabase||!currentUser){lessonProgress=localRows;return}
+ const {data,error}=await supabase.from("lesson_progress").select("user_id,resource_id,reviewed_at,attempt_count,last_score,best_score,updated_at").eq("user_id",currentUser.id);
+ if(error){console.warn("lesson progress",error.message);lessonProgress=localRows;return}
+ const merged=new Map((data||[]).map(x=>[x.resource_id,x]));
+ for(const row of localRows)if(!merged.has(row.resource_id))merged.set(row.resource_id,row);
+ lessonProgress=[...merged.values()];
+}
+async function saveLessonProgress(resourceId,patch){
+ const previous=getLessonProgress(resourceId)||{};
+ const localRow={...previous,...patch,resource_id:resourceId,reviewed_at:patch.reviewed_at||previous.reviewed_at||new Date().toISOString(),attempt_count:patch.attempt_count??previous.attempt_count??0,last_score:patch.last_score??previous.last_score??null,best_score:patch.best_score??previous.best_score??null,updated_at:new Date().toISOString()};
+ const localRows=readLocalProgress().filter(x=>x.resource_id!==resourceId);localRows.push(localRow);writeLocalProgress(localRows);
+ if(supabase&&currentUser){
+  const payload={user_id:currentUser.id,resource_id:resourceId,reviewed_at:localRow.reviewed_at,attempt_count:localRow.attempt_count,last_score:localRow.last_score,best_score:localRow.best_score,updated_at:localRow.updated_at};
+  const {data,error}=await supabase.from("lesson_progress").upsert(payload,{onConflict:"user_id,resource_id"}).select("user_id,resource_id,reviewed_at,attempt_count,last_score,best_score,updated_at").single();
+  if(error){console.warn("save lesson progress",error.message);toast("تم حفظ تقدمك على هذا الجهاز، لكن تعذرت مزامنته مع الحساب.");}
+  else Object.assign(localRow,data||{});
+ }
+ lessonProgress=[...lessonProgress.filter(x=>x.resource_id!==resourceId),localRow];
+ renderResources(resources);
+ return localRow;
+}
+async function markLessonReviewed(resourceId){
+ const resource=resources.find(x=>x.id===resourceId);if(!resource)return;
+ await saveLessonProgress(resourceId,{reviewed_at:new Date().toISOString()});
+ toast("تم تسجيل إتمام مراجعة الدرس. أصبح الاختبار متاحاً لك.");
+}
+function openQuestionBank(){
+ if(currentRole!=="admin")return toast("هذه الميزة متاحة لمسؤول المنصة فقط.");
+ const select=$("questionResourceSelect"),eligible=resources.filter(r=>r.kind!=="حولية");
+ select.innerHTML='<option value="">اختر درساً...</option>'+eligible.map(r=>'<option value="'+escapeHtml(r.id)+'">'+escapeHtml([r.subject,r.title,r.level,r.stream].filter(Boolean).join(" • "))+'</option>').join("");
+ if(eligible.length){select.value=eligible[0].id;renderQuestionBankExisting()}else{$("questionBankMeta").textContent="أضف درساً إلى المكتبة أولاً، ثم ارجع هنا لإضافة أسئلته.";$("questionBankExisting").innerHTML='<p class="helpText">لا توجد دروس متاحة حالياً.</p>'}
+ modal("questionBankModal");
+}
+function renderQuestionBankExisting(){
+ const id=$("questionResourceSelect").value,resource=resources.find(r=>r.id===id);
+ const host=$("questionBankExisting");
+ if(!resource){$("questionBankMeta").textContent="اختر درساً لعرض أسئلته الحالية وإضافة أسئلة جديدة.";host.innerHTML='<p class="helpText">لا يوجد درس محدد.</p>';return}
+ const questions=questionsForResource(resource);
+ $("questionBankMeta").textContent="المادة: "+(resource.subject||"غير محددة")+" · المستوى: "+(resource.level||"غير محدد")+" · الدرس: "+resource.title+" · عدد الأسئلة: "+questions.length;
+ if(!questions.length){host.innerHTML='<p class="helpText">لم تُضف أسئلة لهذا الدرس بعد.</p>';return}
+ host.innerHTML=questions.map((q,i)=>'<div class="questionBankItem"><div class="resourceTop"><strong>'+(i+1)+'. '+escapeHtml(q.question)+'</strong>'+(String(q.id).startsWith("legacy-")?'<small>سؤال قديم ضمن بيانات الدرس</small>':'<button class="btn small" type="button" data-delete-bank-question="'+escapeHtml(q.id)+'">حذف</button>')+'</div><small>عدد الخيارات: '+q.options.length+' · الإجابة الصحيحة محددة</small></div>').join("");
+}
+async function loadBankQuestions(){
+ const {data,error}=await supabase.from("study_questions").select("id,resource_id,question,options,correct_answer,explanation,sort_order,created_at").order("sort_order",{ascending:true}).order("created_at",{ascending:true}).limit(1000);
+ if(error){console.error(error);return false}
+ studyQuestions=data||[];return true;
+}
+function startLessonQuiz(resourceId){
+ const resource=resources.find(x=>x.id===resourceId),questions=questionsForResource(resource);
+ if(!resource||!questions.length)return toast("لا توجد أسئلة تدريبية لهذا الدرس حالياً.");
+ activeLessonQuiz={resource,questions,index:0,answers:[]};
+ $("lessonQuizTitle").textContent="اختبر نفسك: "+resource.title;
+ renderLessonQuiz();modal("lessonQuizModal");
+}
+function renderLessonQuiz(){
+ const quiz=activeLessonQuiz;if(!quiz)return;
+ const index=quiz.index,q=quiz.questions[index];
+ $("lessonQuizMeta").textContent="السؤال "+(index+1)+" من "+quiz.questions.length+" · "+(quiz.resource.subject||"مراجعة الدرس");
+ $("lessonQuizContent").innerHTML='<div class="lessonQuizProgress"><span style="width:'+Math.round((index+1)/quiz.questions.length*100)+'%"></span></div><h3 class="lessonQuizQuestion">'+(index+1)+'. '+escapeHtml(q.question)+'</h3><div class="lessonQuizOptions">'+q.options.map((option,i)=>'<label class="lessonQuizOption"><input type="radio" name="lessonQuizAnswer" value="'+i+'"><span>'+escapeHtml(option)+'</span></label>').join("")+'</div>';
+ const nextLabel=index===quiz.questions.length-1?"إنهاء الاختبار وعرض النتيجة":"السؤال التالي";
+ $("lessonQuizFooter").innerHTML='<span class="helpText">اختر إجابة واحدة للمتابعة.</span><button class="btn primary" id="lessonQuizNextBtn" type="button" disabled>'+nextLabel+'</button>';
+ $("lessonQuizContent").querySelectorAll('input[name="lessonQuizAnswer"]').forEach(input=>input.addEventListener("change",()=>{$("lessonQuizNextBtn").disabled=false;}));
+ $("lessonQuizNextBtn").addEventListener("click",()=>{
+  const selected=$("lessonQuizContent").querySelector('input[name="lessonQuizAnswer"]:checked');
+  if(!selected)return toast("اختر إجابة أولاً.");
+  quiz.answers[index]=Number(selected.value);
+  quiz.index++;
+  if(quiz.index>=quiz.questions.length)finishLessonQuiz();else renderLessonQuiz();
+ });
+}
+async function finishLessonQuiz(){
+ const quiz=activeLessonQuiz;if(!quiz)return;
+ const total=quiz.questions.length;
+ const correct=quiz.questions.reduce((sum,q,i)=>sum+(Number(q.correct_answer)===Number(quiz.answers[i])?1:0),0);
+ const score=Math.round(correct/total*100);
+ $("lessonQuizMeta").textContent="اكتمل الاختبار · "+quiz.resource.title;
+ $("lessonQuizContent").innerHTML='<div class="lessonQuizResult"><span>نتيجتك</span><strong>'+score+'%</strong><div>'+correct+' إجابة صحيحة من '+total+'</div></div><div class="lessonQuizReview">'+quiz.questions.map((q,i)=>{
+  const options=q.options||[],chosen=quiz.answers[i],right=Number(q.correct_answer),isCorrect=chosen===right;
+  return '<div class="lessonQuizReviewItem"><strong>'+(i+1)+'. '+escapeHtml(q.question)+'</strong><p class="'+(isCorrect?'correct':'wrong')+'">'+(isCorrect?'✓ إجابتك صحيحة':'✕ إجابتك: '+escapeHtml(options[chosen]??"لم تُحدد"))+'</p><p>الإجابة الصحيحة: <strong>'+escapeHtml(options[right]??"")+'</strong></p>'+(q.explanation?'<p>التوضيح: '+escapeHtml(q.explanation)+'</p>':'')+'</div>';
+ }).join("")+'</div>';
+ $("lessonQuizFooter").innerHTML='<button class="btn" id="retryLessonQuizBtn" type="button">إعادة الاختبار</button><button class="btn primary" data-close="lessonQuizModal" type="button">إنهاء</button>';
+ $("retryLessonQuizBtn").addEventListener("click",()=>{activeLessonQuiz.index=0;activeLessonQuiz.answers=[];renderLessonQuiz()});
+ const previous=getLessonProgress(quiz.resource.id)||{};
+ await saveLessonProgress(quiz.resource.id,{reviewed_at:previous.reviewed_at||new Date().toISOString(),attempt_count:Number(previous.attempt_count||0)+1,last_score:score,best_score:Math.max(score,Number(previous.best_score||0))});
+}
+
 function renderAssistantLessons(){
  const select=$("assistantLesson");if(!select)return;
  const previous=select.value;
