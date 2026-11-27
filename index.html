@@ -221,16 +221,7 @@ body{background:radial-gradient(ellipse at 78% -8%,#1d527255,transparent 43%),ra
 @media(max-width:560px){.lessonJourney{padding:11px}.lessonQuizDialog{max-height:92vh}.lessonQuizQuestion{font-size:16px}.lessonQuizFooter{flex-wrap:wrap}.lessonQuizFooter .btn{flex:1}}
 
 
-/* Separate student and administrator portals */
-body.admin-portal #home,
-body.admin-portal .stats,
-body.admin-portal #features,
-body.admin-portal #levels,
-body.admin-portal #library,
-body.admin-portal #assistant,
-body.admin-portal footer.footer {display:none!important}
-body.admin-portal #navlinks,
-body.admin-portal #menuBtn {display:none!important}
+/* بوابة المسؤول: إتاحة أقسام التعلّم والتنقل مع إبقاء لوحة الإدارة محمية */
 body.admin-portal main>#adminPanel {padding-top:24px;min-height:calc(100vh - 130px)}
 body.admin-portal .adminWelcome {width:min(1160px,calc(100% - 36px))}
 
@@ -260,7 +251,6 @@ body.admin-portal .adminWelcome {width:min(1160px,calc(100% - 36px))}
 /* حماية المسؤول عبر Cloudflare Turnstile */
 .adminSecurityGate{padding-top:20px;max-width:820px}.adminSecurityCard{display:grid;gap:14px;padding:clamp(20px,4vw,34px);border-color:#66e0c255;background:linear-gradient(145deg,color-mix(in srgb,var(--panel) 92%,#154a48),var(--panel2));box-shadow:0 20px 60px #0004}.adminSecurityIcon{width:58px;height:58px;border-radius:18px;display:grid;place-items:center;font-size:28px;background:#66e0c21c}.adminSecurityCard h2{margin:8px 0;font-size:26px}.adminSecurityCard p{margin:4px 0;color:var(--muted)}.adminCaptchaArea{display:grid;gap:12px;border-top:1px solid var(--line);padding-top:16px}.adminCaptchaWidget{min-height:66px;max-width:100%;display:flex;align-items:center}.adminCaptchaActions{display:flex;gap:9px;flex-wrap:wrap}.adminSecurityCard .helpText{line-height:1.8}
 /* أداة تصوير الفرض والحل بالاعتماد على مراجع المكتبة */
-body.admin-portal #examSolver{display:none!important}
 .examFeature{display:flex;flex-direction:column;gap:10px;transition:transform .22s,border-color .22s,box-shadow .22s}
 .examFeature:hover{transform:translateY(-4px);border-color:#66e0c388;box-shadow:0 18px 42px #0003}
 .examFeature .emoji{display:grid;place-items:center;width:48px;height:48px;border-radius:15px;background:#66e0c21a}
@@ -560,7 +550,12 @@ function applyPortalMode(){
  const brand=$("brandHomeLink");if(brand)brand.href=adminPortal?"/admin/":"/student/";
  $("signupOpen").classList.toggle("hide",adminPortal || !!currentUser);
  const signupTab=document.querySelector('[data-auth-tab="signup"]');if(signupTab)signupTab.classList.toggle("hide",adminPortal);
- $("adminNavLink").classList.add("hide");
+ const adminLink=$("adminNavLink");
+ if(adminLink){
+  adminLink.href=adminPortal?"#adminPanel":"/admin/";
+  adminLink.textContent=adminPortal?"لوحة التحكم":"بوابة المسؤول";
+  adminLink.classList.toggle("hide",!adminPortal);
+ }
 }
 applyPortalMode();
 function toast(message){const el=$("toast");el.textContent=message;el.classList.add("show");clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove("show"),3800)}
