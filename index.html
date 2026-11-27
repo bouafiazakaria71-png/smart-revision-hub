@@ -322,7 +322,7 @@ body{background:radial-gradient(ellipse at 78% -8%,#1d527255,transparent 43%),ra
 <label>رابط ملف PDF أو المورد (اختياري)<input class="field" id="resUrl" type="url" placeholder="https://..."></label>
 <label>ملف PDF للدرس أو الحولية (حتى 20 ميغابايت)<input class="field" id="resFile" type="file" accept="application/pdf,.pdf" required></label>
 <label id="resourceVideoField">رابط فيديو الشرح (اختياري)<input class="field" id="resVideoUrl" type="url" placeholder="https://..."></label>
-<p class="helpText">تُضاف أسئلة هذا الدرس من قسم «بنك الأسئلة التدريبية» في لوحة المسؤول.</p>
+<p class="helpText" id="resourceQuestionHint">تُضاف أسئلة هذا الدرس من قسم «بنك الأسئلة التدريبية» في لوحة المسؤول.</p>
 <button class="btn primary" type="submit" id="saveResourceBtn">حفظ المورد</button></form></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script type="module">
@@ -629,6 +629,7 @@ function openResourceEditor(resource=null,initialType="درس"){
 function updateResourceFormType(){
  const isPastPaper=$("resType").value==="حولية";
  $("resourceVideoField").classList.toggle("hide",isPastPaper);
+ $("resourceQuestionHint").classList.toggle("hide",isPastPaper);
  $("resourceTypeHint").textContent=isPastPaper?"ارفع ملف الحولية بصيغة PDF وحدد المادة والمستوى والشعبة.":"أرفق ملف PDF للدرس، ثم أضف أسئلته من بنك الأسئلة التدريبية.";
  $("resFile").required=!$("resId").value;
 }
