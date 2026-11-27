@@ -211,7 +211,7 @@ body{background:radial-gradient(ellipse at 78% -8%,#24517b55,transparent 42%),ra
       </label>
       <div class="assistantQuickActions">
         <button class="btn small" id="quizLessonBtn" type="button">اختبر فهمي</button>
-        <button class="btn small" id="explainLessonBtn" type="button">اشرح الدرس</button>
+        <button class="btn small" id="explainLessonBtn" type="button">اشرح الدرس ولخّصه</button>
         <button class="btn small" id="assistantChatBtn" type="button">💬 الدردشة مع المساعد الذكي</button>
       </div>
     </div>
@@ -356,7 +356,7 @@ async function askStudyAssistant(mode="ask",messageOverride=null){
  if(mode==="ask"&&!question){toast("اكتب سؤالك أولاً.");input.focus();return;}
  let display=question;
  if(mode==="quiz")display="اختبر فهمي في درس: "+selected.title;
- else if(mode==="explain")display="اشرح لي درس: "+selected.title+" بطريقة مبسطة خطوة بخطوة.";
+ else if(mode==="explain")display="اشرح الدرس ولخّصه: "+selected.title;
  addAssistantBubble("user",display);
  const waiting=addAssistantBubble("bot","جارٍ إرسال سؤالك إلى المساعد الذكي...","waiting");
  assistantBusy=true;
