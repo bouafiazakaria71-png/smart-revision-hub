@@ -123,12 +123,15 @@ body{background:radial-gradient(ellipse at 78% -8%,#24517b55,transparent 42%),ra
 @media(max-width:460px){.assistantQuickActions{grid-template-columns:1fr 1fr}.chatrow{flex-direction:column}.chatrow .btn{width:100%}.chatlog{min-height:230px}}
 @media(prefers-reduced-motion:reduce){.bubble.waiting{animation:none}}
 
+
+.adminUploadGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.adminUploadCard{display:flex;flex-direction:column;align-items:flex-start;gap:10px;min-height:230px}.adminUploadCard p{flex:1}.adminUploadCard .btn{margin-top:8px}
+@media(max-width:560px){.adminUploadGrid{grid-template-columns:1fr}.adminUploadCard{min-height:0}}
 </style>
 </head>
 <body>
 <header class="topbar"><div class="wrap nav">
 <a class="brand" href="#home"><span class="logo">✦</span><span>راجع بذكاء<small>منصتك التعليمية الجزائرية</small></span></a>
-<nav class="navlinks" id="navlinks"><a href="#home">الرئيسية</a><a href="#features">المميزات</a><a href="#levels">المستويات</a><a href="#library">المكتبة</a><a href="#assistant">المساعد</a></nav>
+<nav class="navlinks" id="navlinks"><a href="#home">الرئيسية</a><a href="#features">المميزات</a><a href="#levels">المستويات</a><a href="#library">المكتبة</a><a href="#assistant">المساعد</a><a href="#adminPanel" id="adminNavLink" class="hide">إدارة المحتوى</a></nav>
 <div class="actions"><button class="iconbtn" id="themeBtn" aria-label="تبديل المظهر">☀</button><button class="btn small ghost authBtn" id="loginOpen">دخول</button><button class="btn small primary authBtn" id="signupOpen">إنشاء حساب</button><button class="iconbtn menu" id="menuBtn" aria-label="القائمة">☰</button><button class="btn small hide" id="logoutBtn">خروج</button></div>
 </div></header>
 <main>
@@ -177,21 +180,21 @@ body{background:radial-gradient(ellipse at 78% -8%,#24517b55,transparent 42%),ra
   <div class="float f1">🎯 خطتك نحو التفوق</div><div class="float f2">✧ تعلّم • طبّق • أتقن</div>
 </div></section>
 <div class="wrap stats"><div class="stat"><strong>3</strong><span>مستويات ثانوية</span></div><div class="stat"><strong>∞</strong><span>فرص للتعلّم والتطور</span></div><div class="stat"><strong>24/7</strong><span>مكتبتك في أي وقت</span></div></div>
-<section class="wrap section" id="features"><div class="sectionHead"><div><h2>كل ما تحتاجه في مكان واحد</h2><p>أدوات تساعدك على تنظيم المراجعة دون تعقيد.</p></div></div><div class="grid"><article class="card feature"><span class="emoji">📘</span><h3>مكتبة دراسية</h3><p>تصفح الموارد حسب المستوى والشعبة والمادة.</p></article><article class="card feature"><span class="emoji">🧭</span><h3>مسار واضح</h3><p>اختر مستواك وشعبتك للوصول إلى المحتوى المناسب.</p></article><article class="card feature"><span class="emoji">💬</span><h3>مساعد المراجعة</h3><p>مساعد محلي مجاني يشرح الدروس ويجيب عن الأسئلة دون مفتاح API.</p></article></div></section>
+<section class="wrap section" id="features"><div class="sectionHead"><div><h2>كل ما تحتاجه في مكان واحد</h2><p>أدوات تساعدك على تنظيم المراجعة دون تعقيد.</p></div></div><div class="grid"><article class="card feature"><span class="emoji">📘</span><h3>مكتبة دراسية</h3><p>تصفح الموارد حسب المستوى والشعبة والمادة.</p></article><article class="card feature"><span class="emoji">🧭</span><h3>مسار واضح</h3><p>اختر مستواك وشعبتك للوصول إلى المحتوى المناسب.</p></article><article class="card feature"><span class="emoji">💬</span><h3>مساعد المراجعة</h3><p>مساعد دراسي يشرح الدروس ويجيب عن أسئلة الطلاب.</p></article></div></section>
 <section class="wrap section" id="levels"><div class="sectionHead"><div><h2>اختر مستواك وشعبتك</h2><p>حدد المستوى لتصفية الموارد الدراسية.</p></div></div><div class="levels">
 <div class="level"><h3>الأولى ثانوي</h3><div class="chips"><button class="chip" data-level="الأولى ثانوي" data-stream="جذع مشترك علوم وتكنولوجيا">علوم وتكنولوجيا</button><button class="chip" data-level="الأولى ثانوي" data-stream="جذع مشترك آداب">آداب</button></div></div>
 <div class="level"><h3>الثانية ثانوي</h3><div class="chips"><button class="chip" data-level="الثانية ثانوي" data-stream="علوم تجريبية">علوم تجريبية</button><button class="chip" data-level="الثانية ثانوي" data-stream="رياضيات">رياضيات</button><button class="chip" data-level="الثانية ثانوي" data-stream="آداب وفلسفة">آداب وفلسفة</button><button class="chip" data-level="الثانية ثانوي" data-stream="تسيير واقتصاد">تسيير واقتصاد</button></div></div>
 <div class="level"><h3>الثالثة ثانوي</h3><div class="chips"><button class="chip" data-level="الثالثة ثانوي" data-stream="علوم تجريبية">علوم تجريبية</button><button class="chip" data-level="الثالثة ثانوي" data-stream="رياضيات">رياضيات</button><button class="chip" data-level="الثالثة ثانوي" data-stream="تقني رياضي">تقني رياضي</button><button class="chip" data-level="الثالثة ثانوي" data-stream="آداب وفلسفة">آداب وفلسفة</button><button class="chip" data-level="الثالثة ثانوي" data-stream="تسيير واقتصاد">تسيير واقتصاد</button><button class="chip" data-level="الثالثة ثانوي" data-stream="لغات أجنبية">لغات أجنبية</button></div></div></div><p id="selectionLabel" class="notice hide"></p></section>
-<section class="wrap section" id="library"><div class="sectionHead"><div><h2>المكتبة الدراسية</h2><p>ابحث عن درس أو ملخص أو تمرين.</p></div><button class="btn small hide" id="addResourceBtn">＋ إضافة مورد</button></div>
-<div class="toolbar"><input class="field search" id="searchInput" placeholder="ابحث باسم الدرس أو المادة..."><select class="field" id="typeFilter" style="max-width:170px"><option value="">كل الأنواع</option><option>درس</option><option>ملخص</option><option>تمرين</option><option>حولية</option></select></div>
+<section class="wrap section" id="library"><div class="sectionHead"><div><h2>المكتبة الدراسية</h2><p>تصفح الدروس والتمارين والحوليات حسب المادة والمستوى.</p></div></div>
+<div class="toolbar"><input class="field search" id="searchInput" placeholder="ابحث باسم الدرس أو المادة..."><select class="field" id="typeFilter" style="max-width:170px"><option value="">كل الأنواع</option><option>درس</option><option>تمرين</option><option>حولية</option></select></div>
 <div class="grid" id="resourceGrid"><article class="card resource"><span class="tag">معلومة</span><h3>المكتبة قيد الإعداد</h3><p>بعد ربط قاعدة البيانات، ستظهر هنا الموارد التي يضيفها المسؤول.</p></article></div>
 </section>
 <section class="wrap section adminPanel hide" id="adminPanel">
   <div class="sectionHead"><div><h2>لوحة مسؤول المنصة</h2><p>إدارة المحتوى التعليمي ومراجعة حسابات الطلاب.</p></div><span class="tag">صلاحيات مسؤول</span></div>
-  <div class="grid" style="margin-bottom:16px">
-    <article class="card feature"><span class="emoji">📚</span><h3>المحتوى التعليمي</h3><p>إضافة وتعديل وحذف الدروس والملخصات والتمارين.</p></article>
-    <article class="card feature"><span class="emoji">🎬</span><h3>الفيديوهات والملفات</h3><p>إرفاق فيديو شرح ورابط PDF لكل مورد.</p></article>
-    <article class="card feature"><span class="emoji">📝</span><h3>اختبارات قصيرة</h3><p>إضافة أسئلة اختيار من متعدد إلى الدروس.</p></article>
+  <div class="sectionHead"><div><h3 style="margin:0">إضافة المحتوى إلى المكتبة</h3><p>اختر القسم أولاً. بعد ذلك أدخل بيانات المحتوى وارفع ملف PDF.</p></div></div>
+  <div class="grid adminUploadGrid" style="margin-bottom:18px">
+    <article class="card feature adminUploadCard"><span class="emoji">📘</span><h3>إضافة درس</h3><p>أضف عنوان الدرس والمادة والمستوى والشعبة، ثم ارفع ملف PDF. يمكنك إرفاق فيديو وأسئلة تدريبية.</p><button class="btn primary" id="addLessonResourceBtn" type="button">＋ إضافة درس جديد</button></article>
+    <article class="card feature adminUploadCard"><span class="emoji">📄</span><h3>رفع حولية</h3><p>ارفع موضوع امتحان سابق بصيغة PDF، وحدد المادة والمستوى والشعبة ليجده الطلاب في المكتبة.</p><button class="btn primary" id="addPastPaperBtn" type="button">＋ رفع حولية جديدة</button></article>
   </div>
   <div class="card">
     <div class="sectionHead"><div><h3 style="margin:0">حسابات الطلاب</h3><p>عرض الحسابات وتحديث الاسم والشعبة.</p></div><button class="btn small" id="refreshStudentsBtn" type="button">تحديث القائمة ↻</button></div>
@@ -200,14 +203,13 @@ body{background:radial-gradient(ellipse at 78% -8%,#24517b55,transparent 42%),ra
   </div>
 </section>
 <section class="wrap section" id="assistant">
-  <div class="sectionHead"><div><h2>مساعد راجع بذكاء ✦</h2><p>مساعد دراسي واحد يعمل على الحاسوب والهواتف عبر الخادم، ويشرح الدروس ويلخصها وينشئ اختبارات ويتابع الحوار.</p></div></div>
+  <div class="sectionHead"><div><h2>مساعد راجع بذكاء ✦</h2><p>مساعد دراسي واحد يعمل على الحاسوب والهواتف عبر الخادم، ويشرح الدروس ويجيب عن الأسئلة وينشئ اختبارات تدريبية.</p></div></div>
   <div class="card chatbox aiChat">
     <div class="assistantToolbar">
       <label class="assistantLessonLabel">الدرس الذي تريد المساعدة فيه
         <select class="field" id="assistantLesson"><option value="">أسئلة عامة — دون اختيار درس</option></select>
       </label>
       <div class="assistantQuickActions">
-        <button class="btn small primary" id="summarizeLessonBtn" type="button">✦ لخّص الدرس</button>
         <button class="btn small" id="quizLessonBtn" type="button">اختبر فهمي</button>
         <button class="btn small" id="explainLessonBtn" type="button">اشرح الدرس</button>
         <button class="btn small" id="assistantChatBtn" type="button">💬 الدردشة مع المساعد الذكي</button>
@@ -216,7 +218,7 @@ body{background:radial-gradient(ellipse at 78% -8%,#24517b55,transparent 42%),ra
     <div class="assistantCloudStatus" id="assistantModelStatus"><strong>مساعد واحد عبر الخادم</strong> — يعمل على الحاسوب والهواتف ولا يحتاج إلى تنزيل نموذج أو دعم WebGPU. يحتاج إعداد مزوّد الذكاء الاصطناعي في Supabase.</div>
     <div class="assistantHint" id="assistantHint">اختر درساً أو اكتب سؤالك. ستظهر الإجابة هنا، ويمكنك متابعة الحوار مع الاحتفاظ بآخر الرسائل في جلستك.</div>
     <div class="chatlog" id="chatlog" aria-live="polite" aria-relevant="additions text">
-      <div class="bubble bot">مرحباً! أنا مساعدك الدراسي في راجع بذكاء. أستطيع شرح الدروس، تبسيط المفاهيم، إعداد ملخصات واختبارات، والإجابة عن أسئلتك. ابدأ باختيار درس أو اكتب سؤالك.</div>
+      <div class="bubble bot">مرحباً! أنا مساعدك الدراسي في راجع بذكاء. أستطيع شرح الدروس وتبسيط الأفكار وإنشاء اختبارات والإجابة عن أسئلتك. اختر درساً أو اكتب سؤالك.</div>
     </div>
     <form class="chatrow" id="chatForm"><input class="field" id="chatInput" maxlength="1800" placeholder="اكتب سؤالك عن الدرس أو أي موضوع دراسي..." required><button class="btn primary" id="chatSendBtn" type="submit">إرسال ←</button></form>
     <div class="assistantFootnote">تُرسل الأسئلة ومقتطف الدرس إلى مزوّد الذكاء الاصطناعي لمعالجتها. لا تكتب بيانات شخصية أو كلمات مرور. قد يخطئ المساعد؛ راجع المعلومات المهمة مع الدرس أو الأستاذ.</div>
@@ -227,17 +229,17 @@ body{background:radial-gradient(ellipse at 78% -8%,#24517b55,transparent 42%),ra
 <footer class="footer"><div class="wrap footerInner"><span>© <span id="year"></span> راجع بذكاء — صُممت لدعم التلميذ الجزائري.</span><span>التعلّم رحلة، وكل خطوة تصنع فرقًا.</span></div></footer>
 <div class="modal" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle"><div class="dialog"><div class="dialogHead"><h2 id="authTitle">مرحبًا بك</h2><button class="iconbtn" data-close="authModal" aria-label="إغلاق">✕</button></div><p id="authDesc">أنشئ حسابك أو سجّل الدخول للمتابعة.</p><div class="tabs"><button class="active" data-auth-tab="login">تسجيل الدخول</button><button data-auth-tab="signup">إنشاء حساب</button></div>
 <form class="form" id="authForm"><label id="nameWrap" class="hide">الاسم الكامل<input class="field" id="fullName" maxlength="80" autocomplete="name"></label><label>البريد الإلكتروني<input class="field" id="email" type="email" autocomplete="email" required maxlength="254"></label><label>كلمة المرور<input class="field" id="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128"></label><label id="streamWrap" class="hide">الشعبة<select class="field" id="stream"><option value="">اختر شعبتك</option><option>علوم تجريبية</option><option>رياضيات</option><option>تقني رياضي</option><option>آداب وفلسفة</option><option>تسيير واقتصاد</option><option>لغات أجنبية</option><option>علوم وتكنولوجيا</option><option>آداب</option></select></label><button class="btn primary" id="authSubmit" type="submit">دخول</button><div class="oauthDivider">أو</div><button class="btn googleBtn" id="googleAuthBtn" type="button"><span class="googleMark" aria-hidden="true">G</span> المتابعة باستخدام Google</button><button class="btn ghost small" type="button" id="forgotBtn">نسيت كلمة المرور؟</button></form></div></div>
-<div class="modal" id="resourceModal" role="dialog" aria-modal="true" aria-labelledby="resourceTitle"><div class="dialog wide"><div class="dialogHead"><h2 id="resourceTitle">إضافة مورد</h2><button class="iconbtn" data-close="resourceModal">✕</button></div>
+<div class="modal" id="resourceModal" role="dialog" aria-modal="true" aria-labelledby="resourceTitle"><div class="dialog wide"><div class="dialogHead"><h2 id="resourceTitle">إضافة محتوى جديد</h2><button class="iconbtn" data-close="resourceModal">✕</button></div>
 <form class="form" id="resourceForm">
 <input type="hidden" id="resId">
-<div class="inlineFields"><label>عنوان المورد<input class="field" id="resTitle" required maxlength="140"></label><label>المادة<input class="field" id="resSubject" required maxlength="80"></label></div>
+<div class="inlineFields"><label>عنوان الدرس أو الحولية<input class="field" id="resTitle" required maxlength="140"></label><label>المادة<input class="field" id="resSubject" required maxlength="80"></label></div>
 <div class="inlineFields"><label>المستوى<input class="field" id="resLevel" required maxlength="60"></label><label>الشعبة (اختياري)<input class="field" id="resStream" maxlength="80" placeholder="مثال: آداب وفلسفة"></label></div>
-<label>النوع<select class="field" id="resType"><option>درس</option><option>ملخص</option><option>تمرين</option><option>حولية</option></select></label>
+<label>نوع المحتوى<select class="field" id="resType"><option>درس</option><option>تمرين</option><option>حولية</option></select></label><p class="helpText" id="resourceTypeHint">أرفق ملف PDF للدرس. يمكنك إضافة فيديو وأسئلة تدريبية اختيارياً.</p>
 <label>وصف مختصر<textarea class="field" id="resDescription" rows="3" maxlength="500"></textarea></label>
 <label>رابط ملف PDF أو المورد (اختياري)<input class="field" id="resUrl" type="url" placeholder="https://..."></label>
-<label>رفع ملف PDF من جهازك (حتى 20 ميغابايت)<input class="field" id="resFile" type="file" accept="application/pdf,.pdf"></label>
-<label>رابط فيديو الشرح (YouTube أو رابط مباشر)<input class="field" id="resVideoUrl" type="url" placeholder="https://..."></label>
-<div><div class="sectionHead"><div><h3 style="margin:0">أسئلة حول الدرس</h3><p>أضف أسئلة اختيار من متعدد، وحدد الإجابة الصحيحة لكل سؤال.</p></div><button class="btn small" id="addQuizQuestionBtn" type="button">＋ سؤال</button></div><div class="quizEditor" id="quizEditor"></div></div>
+<label>ملف PDF للدرس أو الحولية (حتى 20 ميغابايت)<input class="field" id="resFile" type="file" accept="application/pdf,.pdf" required></label>
+<label id="resourceVideoField">رابط فيديو الشرح (اختياري)<input class="field" id="resVideoUrl" type="url" placeholder="https://..."></label>
+<div id="resourceQuizField"><div class="sectionHead"><div><h3 style="margin:0">أسئلة تدريبية حول الدرس</h3><p>أضف أسئلة اختيار من متعدد وحدد الإجابة الصحيحة.</p></div><button class="btn small" id="addQuizQuestionBtn" type="button">＋ سؤال</button></div><div class="quizEditor" id="quizEditor"></div></div>
 <button class="btn primary" type="submit" id="saveResourceBtn">حفظ المورد</button></form></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script type="module">
@@ -259,7 +261,7 @@ function updateAccount(user,role="student",profile=null){
    assistantHistoryUserId=nextUserId;
    assistantHistory=readAssistantHistory(nextUserId||"guest");
   }
- currentUser=user;currentRole=role;$("loginOpen").classList.toggle("hide",!!user);$("signupOpen").classList.toggle("hide",!!user);$("logoutBtn").classList.toggle("hide",!user);$("accountAction").textContent=user?"تحديث الملف الشخصي":"تسجيل الدخول";const displayName=(profile?.full_name||user?.user_metadata?.full_name||"").trim();$("accountTitle").textContent=user?(displayName||user.email):"مساحة التلميذ";$("accountSub").textContent=user?(user.email+" • "+(role==="admin"?"مسؤول المنصة":"حساب تلميذ")):"سجّل الدخول لمزامنة حسابك وبياناتك.";$("avatar").textContent=user?(displayName||user.email||"م").trim().charAt(0).toUpperCase():"ز";$("addResourceBtn").classList.toggle("hide",role!=="admin");$("adminPanel").classList.toggle("hide",role!=="admin"||!user);const welcome=$("adminWelcome");if(welcome){welcome.classList.toggle("show",!!user&&role==="admin");$("adminWelcomeTitle").textContent="مرحباً بك في حساب المسؤول زكريا"}}
+ currentUser=user;currentRole=role;$("loginOpen").classList.toggle("hide",!!user);$("signupOpen").classList.toggle("hide",!!user);$("logoutBtn").classList.toggle("hide",!user);$("accountAction").textContent=user?"تحديث الملف الشخصي":"تسجيل الدخول";const displayName=(profile?.full_name||user?.user_metadata?.full_name||"").trim();$("accountTitle").textContent=user?(displayName||user.email):"مساحة التلميذ";$("accountSub").textContent=user?(user.email+" • "+(role==="admin"?"مسؤول المنصة":"حساب تلميذ")):"سجّل الدخول لمزامنة حسابك وبياناتك.";$("avatar").textContent=user?(displayName||user.email||"م").trim().charAt(0).toUpperCase():"ز";$("adminNavLink").classList.toggle("hide",role!=="admin"||!user);$("adminPanel").classList.toggle("hide",role!=="admin"||!user);const welcome=$("adminWelcome");if(welcome){welcome.classList.toggle("show",!!user&&role==="admin");$("adminWelcomeTitle").textContent="مرحباً بك في حساب المسؤول زكريا"}}
 async function loadProfile(user){let profile=null,role="student";const {data,error}=await supabase.from("profiles").select("full_name,stream,role,email").eq("id",user.id).maybeSingle();if(error)console.warn("profile",error.message);if(data){profile=data;role=data.role||"student"}updateAccount(user,role,profile);if(role==="admin")await loadStudents()}
 async function loadResources(){if(!supabase){renderResources([]);return}const {data,error}=await supabase.from("study_resources").select("id,title,subject,level,stream,kind,description,file_url,video_url,questions,created_at").order("created_at",{ascending:false}).limit(100);if(error){console.error(error);toast("تعذر تحميل المكتبة. تحقق من تحديث قاعدة البيانات وسياسات الوصول.");resources=[];renderResources([]);renderAssistantLessons();return}resources=data||[];renderResources(resources);renderAssistantLessons()}
 function renderResources(items){
@@ -275,7 +277,7 @@ function renderResources(items){
    return '<div class="quizItem"><strong>'+(i+1)+'. '+escapeHtml(item.question||"")+'</strong><div class="quizOptions">'+opts.map((op,j)=>'<label><input type="radio" name="quiz-'+escapeHtml(r.id)+'-'+i+'" value="'+j+'"> '+escapeHtml(op)+'</label>').join("")+'</div><div class="quizFeedback" id="quiz-feedback-'+escapeHtml(r.id)+'-'+i+'"></div></div>';
   }).join("")+'<button class="btn small primary" type="button" data-check-quiz="'+escapeHtml(r.id)+'">تصحيح الإجابات</button></details>':'';
   const adminButtons=currentRole==="admin"?'<div class="resourceActions"><button class="btn small" type="button" data-edit-resource="'+escapeHtml(r.id)+'">تعديل</button><button class="btn small" type="button" data-delete-resource="'+escapeHtml(r.id)+'">حذف</button></div>':'';
-  const aiButtons='<div class="resourceActions"><button class="btn small" type="button" data-ai-select="'+escapeHtml(r.id)+'">اسأل عن الدرس</button><button class="btn small primary" type="button" data-ai-summarize="'+escapeHtml(r.id)+'">تلخيص الدرس ✦</button><button class="btn small" type="button" data-ai-quiz="'+escapeHtml(r.id)+'">اختبار الدرس</button></div>';
+  const aiButtons='<div class="resourceActions"><button class="btn small" type="button" data-ai-select="'+escapeHtml(r.id)+'">اسأل عن المحتوى</button><button class="btn small" type="button" data-ai-quiz="'+escapeHtml(r.id)+'">اختبار المحتوى</button></div>';
   const links=(pdf?'<a class="btn small" href="'+escapeHtml(pdf)+'" target="_blank" rel="noopener noreferrer">فتح PDF ↗</a>':'')+(video?'<a class="btn small" href="'+escapeHtml(video)+'" target="_blank" rel="noopener noreferrer">مشاهدة الشرح ▶</a>':'');
   return '<article class="card resource"><div class="resourceTop"><span class="tag">'+escapeHtml(r.kind||"مورد")+'</span><span style="color:var(--muted);font-size:11px">'+escapeHtml(r.level||"")+(r.stream?' • '+escapeHtml(r.stream):'')+'</span></div><h3>'+escapeHtml(r.title)+'</h3><p>'+escapeHtml(r.subject||"")+' • '+escapeHtml(r.description||"لا يوجد وصف إضافي.")+'</p>'+(links?'<div class="resourceLinks">'+links+'</div>':'<span class="tag">محتوى نصي</span>')+quiz+aiButtons+adminButtons+'</article>';
  }).join("");
@@ -346,7 +348,7 @@ async function askStudyAssistant(mode="ask",messageOverride=null){
  }
  const selectedId=$("assistantLesson").value;
  const selected=resources.find(r=>r.id===selectedId);
- if((mode==="summarize"||mode==="quiz"||mode==="explain")&&!selected){
+ if((mode==="quiz"||mode==="explain")&&!selected){
   toast("اختر درساً من القائمة أولاً.");$("assistantLesson").focus();return;
  }
  const input=$("chatInput");
@@ -359,7 +361,7 @@ async function askStudyAssistant(mode="ask",messageOverride=null){
  addAssistantBubble("user",display);
  const waiting=addAssistantBubble("bot","جارٍ إرسال سؤالك إلى المساعد الذكي...","waiting");
  assistantBusy=true;
- const buttons=["chatSendBtn","summarizeLessonBtn","quizLessonBtn","explainLessonBtn","assistantChatBtn"];
+ const buttons=["chatSendBtn","quizLessonBtn","explainLessonBtn","assistantChatBtn"];
  buttons.forEach(id=>{$(id).disabled=true});
  if(messageOverride===null)input.value="";
  const controller=new AbortController();
@@ -427,13 +429,23 @@ function addQuizEditorRow(question={}){
  row.innerHTML='<div class="resourceTop"><h4>سؤال جديد</h4><button class="btn small" type="button" data-remove-quiz-row>إزالة</button></div><label>نص السؤال<input class="field q-prompt" maxlength="500" value="'+esc(question.question||"")+'" placeholder="اكتب السؤال"></label><div class="quizOptionsGrid">'+[0,1,2,3].map(i=>'<label>الخيار '+(i+1)+'<input class="field q-option" maxlength="220" value="'+esc(options[i]||"")+'" placeholder="الخيار '+(i+1)+'"></label>').join("")+'</div><label>رقم الإجابة الصحيحة<select class="field q-correct">'+[1,2,3,4].map(i=>'<option value="'+(i-1)+'" '+((Number(question.correct_answer)===i-1)?'selected':'')+'>الخيار '+i+'</option>').join("")+'</select></label><label>تفسير الإجابة (اختياري)<input class="field q-explanation" maxlength="400" value="'+esc(question.explanation||"")+'" placeholder="اشرح الإجابة باختصار"></label>';
  $("quizEditor").appendChild(row);
 }
-function openResourceEditor(resource=null){
+function openResourceEditor(resource=null,initialType="درس"){
  if(currentRole!=="admin")return toast("هذه الميزة متاحة لمسؤول المنصة فقط.");
  $("resourceForm").reset();$("quizEditor").innerHTML="";$("resId").value=resource?.id||"";
- $("resourceTitle").textContent=resource?"تعديل المورد":"إضافة مورد جديد";$("saveResourceBtn").textContent=resource?"حفظ التعديلات":"حفظ المورد";
+ $("resourceTitle").textContent=resource?"تعديل المحتوى":(initialType==="حولية"?"رفع حولية جديدة":"إضافة درس جديد");
+ $("saveResourceBtn").textContent=resource?"حفظ التعديلات":(initialType==="حولية"?"رفع الحولية":"حفظ الدرس");
  if(resource){$("resTitle").value=resource.title||"";$("resSubject").value=resource.subject||"";$("resLevel").value=resource.level||"";$("resStream").value=resource.stream||"";$("resType").value=resource.kind||"درس";$("resDescription").value=resource.description||"";$("resUrl").value=resource.file_url||"";$("resVideoUrl").value=resource.video_url||"";(Array.isArray(resource.questions)?resource.questions:[]).forEach(addQuizEditorRow)}
+ else $("resType").value=initialType;
  if(!$("quizEditor").children.length)addQuizEditorRow();
+ updateResourceFormType();
  modal("resourceModal");
+}
+function updateResourceFormType(){
+ const isPastPaper=$("resType").value==="حولية";
+ $("resourceVideoField").classList.toggle("hide",isPastPaper);
+ $("resourceQuizField").classList.toggle("hide",isPastPaper);
+ $("resourceTypeHint").textContent=isPastPaper?"ارفع ملف الحولية بصيغة PDF وحدد المادة والمستوى والشعبة.":"أرفق ملف PDF للدرس، ويمكنك إضافة فيديو وأسئلة تدريبية اختيارياً.";
+ $("resFile").required=!$("resId").value;
 }
 async function loadStudents(){
  if(!supabase||currentRole!=="admin")return;
@@ -455,12 +467,14 @@ $("googleAuthBtn").addEventListener("click",async()=>{if(!supabase)return toast(
 $("forgotBtn").addEventListener("click",async()=>{if(!supabase)return toast("أكمل إعداد Supabase أولًا.");const email=$("email").value.trim();if(!email)return toast("اكتب بريدك الإلكتروني أولًا.");const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});toast(error?"تعذر إرسال رابط الاستعادة: "+error.message:"إذا كان البريد مسجلًا، سيصلك رابط استعادة كلمة المرور.")});
 document.querySelectorAll("[data-level]").forEach(b=>b.addEventListener("click",()=>{selectedLevel=b.dataset.level;selectedStream=b.dataset.stream;document.querySelectorAll("[data-level]").forEach(x=>x.classList.toggle("active",x===b));$("selectionLabel").textContent="تم اختيار "+selectedLevel+" — "+selectedStream+". ستُستخدم هذه الخيارات لتصفية موارد المكتبة."; $("selectionLabel").classList.remove("hide");$("library").scrollIntoView({behavior:"smooth"});renderResources(resources)}));
 $("searchInput").addEventListener("input",()=>renderResources(resources));$("typeFilter").addEventListener("change",()=>renderResources(resources));
-$("addResourceBtn").addEventListener("click",()=>openResourceEditor());
+$("addLessonResourceBtn").addEventListener("click",()=>openResourceEditor(null,"درس"));
+ $("addPastPaperBtn").addEventListener("click",()=>openResourceEditor(null,"حولية"));
+ $("resType").addEventListener("change",updateResourceFormType);
 $("addQuizQuestionBtn").addEventListener("click",()=>addQuizEditorRow());
 $("quizEditor").addEventListener("click",e=>{const btn=e.target.closest("[data-remove-quiz-row]");if(btn){btn.closest(".quizEditorRow").remove();}});
 $("resourceGrid").addEventListener("click",async e=>{
- const aiSelect=e.target.closest("[data-ai-select]"),aiSummarize=e.target.closest("[data-ai-summarize]"),aiQuiz=e.target.closest("[data-ai-quiz]");
- if(aiSelect||aiSummarize||aiQuiz){const id=(aiSelect||aiSummarize||aiQuiz).dataset.aiSelect||(aiSummarize&&aiSummarize.dataset.aiSummarize)||(aiQuiz&&aiQuiz.dataset.aiQuiz);$("assistantLesson").value=id;const r=resources.find(x=>x.id===id);$("assistant").scrollIntoView({behavior:"smooth"});if(aiSummarize)askStudyAssistant("summarize");else if(aiQuiz)askStudyAssistant("quiz");else{$("assistantHint").textContent="اسأل الآن عن درس: "+(r?.title||"");$("chatInput").focus()}return}
+ const aiSelect=e.target.closest("[data-ai-select]"),aiQuiz=e.target.closest("[data-ai-quiz]");
+ if(aiSelect||aiQuiz){const id=aiSelect?aiSelect.dataset.aiSelect:aiQuiz.dataset.aiQuiz;$("assistantLesson").value=id;const r=resources.find(x=>x.id===id);$("assistant").scrollIntoView({behavior:"smooth"});if(aiQuiz)askStudyAssistant("quiz");else{$("assistantHint").textContent="اسأل الآن عن المحتوى: "+(r?.title||"");$("chatInput").focus()}return}
  const edit=e.target.closest("[data-edit-resource]"),del=e.target.closest("[data-delete-resource]"),check=e.target.closest("[data-check-quiz]");
  if(edit){const r=resources.find(x=>x.id===edit.dataset.editResource);if(r)openResourceEditor(r);return}
  if(del){if(currentRole!=="admin"||!confirm("هل أنت متأكد من حذف هذا المورد؟"))return;const {error}=await supabase.from("study_resources").delete().eq("id",del.dataset.deleteResource);if(error)return toast("تعذر الحذف: "+error.message);toast("تم حذف المورد.");await loadResources();return}
@@ -510,7 +524,6 @@ $("resourceForm").addEventListener("submit",async e=>{
  $("resourceForm").reset();$("quizEditor").innerHTML="";modal("resourceModal",false);toast(editingId?"تم تحديث المورد بنجاح.":"تمت إضافة المورد بنجاح.");await loadResources();
 });
 $("chatForm").addEventListener("submit",e=>{e.preventDefault();askStudyAssistant("ask")});
-$("summarizeLessonBtn").addEventListener("click",()=>askStudyAssistant("summarize"));
 $("quizLessonBtn").addEventListener("click",()=>askStudyAssistant("quiz"));
 $("explainLessonBtn").addEventListener("click",()=>askStudyAssistant("explain"));
 $("assistantChatBtn").addEventListener("click",()=>{
